@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-
+#include <assert.h>
 
 #define ADDRESS(x,y,z) (((z)*GY + (y))*GX + (x))
 
@@ -20,6 +20,9 @@ returns:
   const int GY = ngrid[1];
   const int GZ = ngrid[2];
   const int nTotalGrids = GX*GY*GZ;
+  //assert ( GX > 2 );
+  //assert ( GY > 2 );
+  //assert ( GZ > 2 );
   int npair = 0;
   (*pairs) = (int*) malloc(sizeof(int)*14*nTotalGrids*2);
   //make neighboring grid list
@@ -27,11 +30,14 @@ returns:
     for(int iy=0;iy<GY;iy++){
       for(int iz=0;iz<GZ;iz++){
         int a = ADDRESS(ix,iy,iz); //center
-        for(int kx=ix-1;kx<=ix+1;kx++){
+        int kx0 = (GX==2) ? ix : ix - 1;
+        for(int kx=kx0;kx<=ix+1;kx++){
           int jx = (kx+GX) % GX;
-          for(int ky=iy-1;ky<=iy+1;ky++){
+          int ky0 = (GY==2) ? iy : iy - 1;
+          for(int ky=ky0;ky<=iy+1;ky++){
             int jy = (ky+GY) % GY;
-            for(int kz=iz-1;kz<=iz+1;kz++){
+            int kz0 = (GZ==2) ? iz : iz - 1;
+            for(int kz=kz0;kz<=iz+1;kz++){
               int jz = (kz+GZ) % GZ;
               int b = ADDRESS(jx,jy,jz);
               if ( a<b ){

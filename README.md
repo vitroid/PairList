@@ -1,5 +1,6 @@
 #pairlist
-Generates the pair list of atoms that are closer each other than the given threshold under the periodic boundary conditions.
+Generates the pair list of atoms that are closer each other than the
+given threshold under the orthorhombic periodic boundary conditions.
 
 ##Usage
 
@@ -14,5 +15,4 @@ The input file `pairlist-test.data` contains the positions of 432 atoms, each of
 
 ##Bugs
 
-* It does not work well when the number of grid at an axis is less than 3.
 * It is not applicable for the pairs between two atom sets of different kind.
