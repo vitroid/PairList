@@ -41,6 +41,8 @@ def test():
     pairs = pl.pairlist(Os, 0.245, cell, Hs)
     pairs = pairs[pairs[:,2]> 0.12] #not covalent bond
     assert len(pairs) == 864
+    for i,j,d in pairs:
+        print("{0}--{1}\t{2}".format(int(i),int(j),d))
     print("{0} Number of HBs".format(len(pairs)))
 
 test()
