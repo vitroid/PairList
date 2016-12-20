@@ -22,7 +22,7 @@ Test(){
     }
   }
   int* pairs;
-  int nPairs = pairlist(nAtoms, atoms, 2.0, cell, &pairs);
+  int nPairs = pairlist(nAtoms, atoms, 0, NULL, 2.0, cell, &pairs);
   for(int i=0;i<nPairs;i++){
     int r0 = pairs[i*2+0];
     int r1 = pairs[i*2+1];

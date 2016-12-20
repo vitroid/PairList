@@ -49,7 +49,7 @@ Test(){
   //printf(line, "%f %f %f\n", cell[0], cell[1], cell[2]);
   int* pairs;
   //find pairs of H and O within 0.12 nm, i.e. covalent OH bonds.
-  int nPairs = pairlist2(nHatoms, Hatoms, nOatoms, Oatoms, 0.12, cell, &pairs);
+  int nPairs = pairlist(nHatoms, Hatoms, nOatoms, Oatoms, 0.12, cell, &pairs);
   for(int i=0;i<nPairs;i++){
     int r0 = pairs[i*2+0];
     int r1 = pairs[i*2+1];
@@ -66,7 +66,7 @@ Test(){
   free(pairs);
 
   //find pairs of H and O within 0.25 nm, i.e. hydrogen bonds.
-  nPairs = pairlist2(nHatoms, Hatoms, nOatoms, Oatoms, 0.25, cell, &pairs);
+  nPairs = pairlist(nHatoms, Hatoms, nOatoms, Oatoms, 0.25, cell, &pairs);
   int nHBs = 0;
   for(int i=0;i<nPairs;i++){
     int r0 = pairs[i*2+0];

@@ -3,10 +3,23 @@
 #include <math.h>
 #include <string.h>
 #include <assert.h>
+#include "pairlist.h"
 
 #define ADDRESS(x,y,z) (((z)*GY + (y))*GX + (x))
 #define True 1
 #define False 0
+int pairlist1(int nAtoms, float *atoms, float threshold, float cell[3], int **pairs);
+int pairlist2(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float threshold, float cell[3], int **pairs);
+
+int
+pairlist(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float threshold, float cell[3], int **pairs)
+{
+  if ( ( nAtoms1 == 0 ) || (atoms1 == NULL) )
+    return pairlist1(nAtoms0, atoms0, threshold, cell, pairs);
+  return pairlist2(nAtoms0, atoms0, nAtoms1, atoms1, threshold, cell, pairs);
+}
+   
+
 
 int
 gridpairlist(int ngrid[3], int single, int **pairs)
@@ -62,7 +75,7 @@ returns:
 
 
 int
-pairlist(int nAtoms, float *atoms, float threshold, float cell[3], int **pairs)
+pairlist1(int nAtoms, float *atoms, float threshold, float cell[3], int **pairs)
 /* 
 given:
     nAtoms: number of atoms
