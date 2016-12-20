@@ -15,4 +15,3 @@ The input file `pairlist-test.data` contains the positions of 432 atoms, each of
 
 ##Bugs
 
-* It is not applicable for the pairs between two atom sets of different kind.
