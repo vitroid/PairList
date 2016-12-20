@@ -27,12 +27,15 @@ returns:
   //assert ( GY > 2 );
   //assert ( GZ > 2 );
   int npair = 0;
-  (*pairs) = (int*) malloc(sizeof(int)*26*nTotalGrids*2);
+  int neighborcells = 26;
+  if ( single ) neighborcells = 13;
+  (*pairs) = (int*) malloc(sizeof(int)*neighborcells*nTotalGrids*2);
   //make neighboring grid list
   for(int ix=0;ix<GX;ix++){
     for(int iy=0;iy<GY;iy++){
       for(int iz=0;iz<GZ;iz++){
         int a = ADDRESS(ix,iy,iz); //center
+	//for all 26 neighbor cells
         int kx0 = (GX==2) ? ix : ix - 1;
         for(int kx=kx0;kx<=ix+1;kx++){
           int jx = (kx+GX) % GX;
@@ -348,7 +351,7 @@ returns:
   for(int g=0;g<nTotalGrids;g++){
     for(int j=0; j<nResidents0[g]; j++){
       int r0 = residents0[headOfList0[g] + j];
-      for(int k=j+1; k<nResidents1[g]; k++){
+      for(int k=0; k<nResidents1[g]; k++){
         int r1 = residents1[headOfList1[g] + k];
         float sum2 = 0.0;
         for(int d=0;d<3;d++){

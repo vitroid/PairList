@@ -1,6 +1,9 @@
 OBJ=pairlist.o pairlist-test pairlist-test2 pairlist-test3
 ALL=$(OBJ) pairlist-test2.data pairlist-test3.gro
 all: $(ALL)
+	./pairlist-test
+	./pairlist-test2
+	./pairlist-test3
 %.o: %.c
 	$(CC) -c -g $< -o $@
 #for tests
