@@ -4,6 +4,7 @@ all: $(ALL)
 	./pairlist-test
 	./pairlist-test2
 	./pairlist-test3
+	python3 pairlist.py
 %.o: %.c
 	$(CC) -c -g $< -o $@
 #for tests

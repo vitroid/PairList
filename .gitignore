@@ -6,3 +6,5 @@ pairlist-test
 pairlist-test2
 
 pairlist-test3
+
+*.pyc
