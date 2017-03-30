@@ -8,18 +8,18 @@
 #define ADDRESS(x,y,z) (((z)*GY + (y))*GX + (x))
 #define True 1
 #define False 0
-int pairlist1(int nAtoms, float *atoms, float threshold, float cell[3], int **pairs);
-int pairlist2(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float threshold, float cell[3], int **pairs);
+int pairlist1(int nAtoms, float *atoms, float lower, float higher, float cell[3], int **pairs);
+int pairlist2(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float lower, float higher, float cell[3], int **pairs);
 
 int
-pairlist(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float threshold, float cell[3], int **pairs)
+pairlist(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float lower, float higher, float cell[3], int **pairs)
 {
   if ( ( nAtoms1 == 0 ) || (atoms1 == NULL) || ( atoms0 == atoms1) ){
     if ( atoms0 == atoms1)
       assert (nAtoms0 == nAtoms1);
-    return pairlist1(nAtoms0, atoms0, threshold, cell, pairs);
+    return pairlist1(nAtoms0, atoms0, lower, higher, cell, pairs);
   }
-  return pairlist2(nAtoms0, atoms0, nAtoms1, atoms1, threshold, cell, pairs);
+  return pairlist2(nAtoms0, atoms0, nAtoms1, atoms1, lower, higher, cell, pairs);
 }
    
 
@@ -78,12 +78,12 @@ returns:
 
 
 int
-pairlist1(int nAtoms, float *atoms, float threshold, float cell[3], int **pairs)
+pairlist1(int nAtoms, float *atoms, float lower, float higher, float cell[3], int **pairs)
 /* 
 given:
     nAtoms: number of atoms
     atoms: positions of atoms
-    threshold: two atoms are considered to be paired when their distance is below it.
+    lower, higher: two atoms are considered to be paired when their distance is between them.
     cell: rectangular cell shape
 returns:
     return value: number of pairs
@@ -94,7 +94,7 @@ returns:
   //determine the grid size
   int ngrid[3];
   for(int d=0;d<3;d++){
-    ngrid[d] = (int) floor(cell[d] / threshold);
+    ngrid[d] = (int) floor(cell[d] / higher);
   }
   const int GX = ngrid[0];
   const int GY = ngrid[1];
@@ -184,7 +184,7 @@ returns:
           delta -= floor( delta / cell[d] + 0.5 ) * cell[d];
           sum2 += delta*delta;
         }
-        if (sum2 < threshold*threshold){
+        if ((lower*lower < sum2) && (sum2 < higher*higher)){
           (*pairs)[nPairs*2+0] = r0;
           (*pairs)[nPairs*2+1] = r1;
           nPairs ++;
@@ -203,7 +203,7 @@ returns:
           delta -= floor( delta / cell[d] + 0.5 ) * cell[d];
           sum2 += delta*delta;
         }
-        if (sum2 < threshold*threshold){
+        if ((lower*lower < sum2) && (sum2 < higher*higher)){
           (*pairs)[nPairs*2+0] = r0;
           (*pairs)[nPairs*2+1] = r1;
           nPairs ++;
@@ -218,14 +218,14 @@ returns:
   
 
 int
-pairlist2(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float threshold, float cell[3], int **pairs)
+pairlist2(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float lower, float higher, float cell[3], int **pairs)
 /* 
 given:
     nAtoms0: number of atoms of component 0
     atoms0: positions of atoms
     nAtoms1: number of atoms of component 1
     atoms1: positions of atoms
-    threshold: two atoms are considered to be paired when their distance is below it.
+    higher: two atoms are considered to be paired when their distance is below it.
     cell: rectangular cell shape
 returns:
     return value: number of pairs
@@ -236,13 +236,13 @@ returns:
   //determine the grid size
   int ngrid[3];
   for(int d=0;d<3;d++){
-    ngrid[d] = (int) floor(cell[d] / threshold);
+    ngrid[d] = (int) floor(cell[d] / higher);
   }
   const int GX = ngrid[0];
   const int GY = ngrid[1];
   const int GZ = ngrid[2];
   const int nTotalGrids = GX*GY*GZ;
-  printf("%d nTotalGrids\n", nTotalGrids);
+  printf("%dx%dx%d =%d nTotalGrids\n", GX,GY,GZ,nTotalGrids);
   //count the number of residents in each grid cells.
   int nResidents0[nTotalGrids];
   int nResidents1[nTotalGrids];
@@ -342,12 +342,13 @@ returns:
   }
 
   *pairs = (int*) malloc(sizeof(int) * rough*2);
+  printf("rough: %d\n", rough);
   int nPairs=0;
   for(int i=0;i<nGridPairs;i++){
     int g0 = gridPairs[i*2+0];
+    int g1 = gridPairs[i*2+1];
     for(int j=0; j<nResidents0[g0]; j++){
       int r0 = residents0[headOfList0[g0] + j];
-      int g1 = gridPairs[i*2+1];
       for(int k=0; k<nResidents1[g1]; k++){
         int r1 = residents1[headOfList1[g1] + k];
         float sum2 = 0.0;
@@ -356,7 +357,7 @@ returns:
           delta -= floor( delta / cell[d] + 0.5 ) * cell[d];
           sum2 += delta*delta;
         }
-        if (sum2 < threshold*threshold){
+        if ((lower*lower < sum2) && (sum2 < higher*higher)){
           (*pairs)[nPairs*2+0] = r0;
           (*pairs)[nPairs*2+1] = r1;
           nPairs ++;
@@ -375,7 +376,7 @@ returns:
           delta -= floor( delta / cell[d] + 0.5 ) * cell[d];
           sum2 += delta*delta;
         }
-        if (sum2 < threshold*threshold){
+        if ((lower*lower < sum2) && (sum2 < higher*higher)){
           (*pairs)[nPairs*2+0] = r0;
           (*pairs)[nPairs*2+1] = r1;
           nPairs ++;

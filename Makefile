@@ -4,7 +4,7 @@ all: $(ALL)
 	./pairlist-test
 	./pairlist-test2
 	./pairlist-test3
-	python3 example.py
+#	python3 example.py
 %.o: %.c
 	$(CC) -c -g $< -o $@
 #for tests
@@ -13,8 +13,8 @@ all: $(ALL)
 	$(CC) -g $^ -o $@
 pairlist-test2.data:
 	genice --format q --rep 3 3 3 1h --water tip4p > $@
-pairlist-test3.gro:
-	genice --format g --rep 3 3 3 1h > $@
+pairlist-test3.gro: Makefile
+	genice --format g --rep 20 20 20  1h > $@
 
 clean:
 	-rm $(ALL)
