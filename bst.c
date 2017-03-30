@@ -7,7 +7,17 @@ bnode* new_node(int value){
   bnode* node = (bnode*) malloc(sizeof(bnode));
   node->right = node->left = NULL;
   node->value = value;
+  node->size  = 1;
   return node;
+}
+
+
+int size(bnode* root)
+{
+  if (root==NULL){
+    return 0;
+  }
+  return root->size;
 }
 
 
@@ -18,13 +28,20 @@ insert(bnode* root, int value)
     return new_node(value);
   }
   if (root->value == value){
+    //no update
     return root;
   }
   if (root->value < value){
+    int orig = size(root->right);
     root->right = insert(root->right, value);
+    int diff = root->right->size - orig;
+    root->size += diff;
     return root;
   }
+  int orig = size(root->left);
   root->left = insert(root->left, value);
+  int diff = root->left->size - orig;
+  root->size += diff;
   return root;
 }
 
@@ -43,19 +60,6 @@ lookup(bnode* root, int value)
     return lookup(root->right, value);
   }
   return lookup(root->left, value);
-}
-
-int
-size(bnode* root)
-{
-  int s = 1;
-  if (root->right != NULL){
-    s += size(root->right);
-  }
-  if (root->left != NULL){
-    s += size(root->left);
-  }
-  return s;
 }
 
 

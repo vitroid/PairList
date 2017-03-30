@@ -129,9 +129,9 @@ void Test()
   }
   for(int i=0;i<nOatoms; i++){
     dispose(neiA[i]);
-    dispoee(neiC[i]);
+    dispose(neiC[i]);
     dispose(neiAB[i]);
-    dispoee(neiAC[i]);
+    dispose(neiAC[i]);
   }
   printf("%d ntet\n", ntet);
   /*

@@ -5,6 +5,7 @@ typedef struct bnode_ {
   struct bnode_* left;
   struct bnode_* right;
   int value;
+  int size;
 } bnode;
 
 
