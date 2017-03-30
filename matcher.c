@@ -9,8 +9,10 @@
 //read Gromacs-type data and find the OH covalent bonds.
 
 //benchmark on vitroid-black 2017-3-31
-//original matcher (no bst): user	1m28.847s
-//matcher with bst: user	1m48.723s
+//original matcher (no bst):             user	1m28.847s
+//matcher with bst:                      user	1m48.723s
+//matcher with bst (size() is improved): user	1m48.942s
+
 
 int
 LoadGRO(float** Oatoms, float* cell){
