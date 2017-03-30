@@ -12,9 +12,9 @@ all: $(ALL)
 %: %.o pairlist.o
 	$(CC) -g $^ -o $@
 pairlist-test2.data:
-	( cd ../GenIce; ./genice --format q --rep 3 3 3 1h --water tip4p ) > $@
+	genice --format q --rep 3 3 3 1h --water tip4p > $@
 pairlist-test3.gro:
-	( cd ../GenIce; ./genice --format g --rep 3 3 3 1h ) > $@
+	genice --format g --rep 3 3 3 1h > $@
 
 clean:
-	-rm $(OBJ)
+	-rm $(ALL)
