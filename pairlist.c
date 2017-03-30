@@ -14,8 +14,11 @@ int pairlist2(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float thre
 int
 pairlist(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float threshold, float cell[3], int **pairs)
 {
-  if ( ( nAtoms1 == 0 ) || (atoms1 == NULL) )
+  if ( ( nAtoms1 == 0 ) || (atoms1 == NULL) || ( atoms0 == atoms1) ){
+    if ( atoms0 == atoms1)
+      assert (nAtoms0 == nAtoms1);
     return pairlist1(nAtoms0, atoms0, threshold, cell, pairs);
+  }
   return pairlist2(nAtoms0, atoms0, nAtoms1, atoms1, threshold, cell, pairs);
 }
    
