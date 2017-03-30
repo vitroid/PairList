@@ -9,7 +9,7 @@ all: $(ALL)
 	$(CC) -c -g -O $< -o $@
 #for tests
 %: %.c
-%: %.o pairlist.o
+%: %.o pairlist.o bst.o
 	$(CC) -g -O $^ -o $@
 pairlist-test2.data:
 	genice --format q --rep 3 3 3 1h --water tip4p > $@

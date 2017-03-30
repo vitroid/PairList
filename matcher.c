@@ -4,8 +4,13 @@
 #include <string.h>
 #include <assert.h>
 #include "pairlist.h"
+#include "bst.h"
 
 //read Gromacs-type data and find the OH covalent bonds.
+
+//benchmark on vitroid-black 2017-3-31
+//original matcher (no bst): user	1m28.847s
+//matcher with bst: user	1m48.723s
 
 int
 LoadGRO(float** Oatoms, float* cell){
@@ -40,29 +45,17 @@ LoadGRO(float** Oatoms, float* cell){
 void
 MakeNeighborList(int natoms, int npairs, int* pairs, 
 		 //return values
-		 int* nnei, int** nei)
+		 bnode** nei)
 {
   //make neighborlist
   for(int i=0;i<natoms; i++){
-    nnei[i] = 0;
+    nei[i] = NULL;
   }
   for(int i=0;i<npairs;i++){
     int r0 = pairs[i*2+0];
     int r1 = pairs[i*2+1];
-    nnei[r0] += 1;
-    nnei[r1] += 1;
-  }
-  for(int i=0;i<natoms; i++){
-    nei[i] = (int*)malloc(nnei[i]*sizeof(int));
-    nnei[i] = 0;
-  }
-  for(int i=0;i<npairs;i++){
-    int r0 = pairs[i*2+0];
-    int r1 = pairs[i*2+1];
-    nei[r0][nnei[r0]] = r1;
-    nnei[r0]+=1;
-    nei[r1][nnei[r1]] = r0;
-    nnei[r1]+=1;
+    nei[r0] = insert(nei[r0], r1);
+    nei[r1] = insert(nei[r1], r0);
   }
 }
 
@@ -99,36 +92,46 @@ void Test()
   int nPairsC = pairlist(nOatoms, Oatoms, nOatoms, Oatoms, c*0.97, c*1.03, cell, &pairsC);
   int nPairsAB = pairlist(nOatoms, Oatoms, nOatoms, Oatoms, ab*0.97, ab*1.03, cell, &pairsAB);
   int nPairsAC = pairlist(nOatoms, Oatoms, nOatoms, Oatoms, ac*0.97, ac*1.03, cell, &pairsAC);
-  int nneiA[nOatoms];
-  int* neiA[nOatoms];
-  int nneiC[nOatoms];
-  int* neiC[nOatoms];
-  int nneiAB[nOatoms];
-  int* neiAB[nOatoms];
-  int nneiAC[nOatoms];
-  int* neiAC[nOatoms];
-  MakeNeighborList(nOatoms, nPairsA, pairsA, nneiA, neiA);
-  MakeNeighborList(nOatoms, nPairsC, pairsC, nneiC, neiC);
-  MakeNeighborList(nOatoms, nPairsAB, pairsAB, nneiAB, neiAB);
-  MakeNeighborList(nOatoms, nPairsAC, pairsAC, nneiAC, neiAC);
+  bnode* neiA[nOatoms];
+  bnode* neiC[nOatoms];
+  bnode* neiAB[nOatoms];
+  bnode* neiAC[nOatoms];
+  MakeNeighborList(nOatoms, nPairsA, pairsA, neiA);
+  MakeNeighborList(nOatoms, nPairsC, pairsC, neiC);
+  MakeNeighborList(nOatoms, nPairsAB, pairsAB, neiAB);
+  MakeNeighborList(nOatoms, nPairsAC, pairsAC, neiAC);
   //find triangle PQR that matches the shape
   int ntet=0;
   for(int p=0; p<nOatoms; p++){
-    for(int i=0; i<nneiA[p]; i++){
-      int q = neiA[p][i];
-      for(int j=0; j<nneiA[p]; j++){
-	int r = neiA[p][j];
-	if ( isin(r, nneiAB[q], neiAB[q] ) ){
-	  for(int k=0; k<nneiC[p]; k++){
-	    int s = neiC[p][k];
-	    if ( isin(s, nneiAC[q], neiAC[q]) && isin(s, nneiAC[r], neiAC[r]) ){
+    int nnA = size(neiA[p]);
+    //printf("size of neiA is %d\n", nnA);
+    int* nA = get_array(neiA[p]);
+    for(int i=0; i<nnA; i++){
+      int q = nA[i];
+      for(int j=0; j<nnA; j++){
+	int r = nA[j];
+	if ( lookup(neiAB[q], r) ){
+	  
+	  int* nC = get_array(neiC[p]);
+	  int nnC = size(neiC[p]);
+	  for(int k=0; k<nnC; k++){
+	    int s = nC[k];
+	    if ( lookup(neiAC[q], s) && lookup(neiAC[r], s) ){
 	      //printf("%d %d %d\n", p,q,r);
 	      ntet += 1;
 	    }
 	  }
+	  free(nC);
 	}
       }
     }
+    free(nA);
+  }
+  for(int i=0;i<nOatoms; i++){
+    dispose(neiA[i]);
+    dispoee(neiC[i]);
+    dispose(neiAB[i]);
+    dispoee(neiAC[i]);
   }
   printf("%d ntet\n", ntet);
   /*
