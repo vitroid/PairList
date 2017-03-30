@@ -67,6 +67,18 @@ MakeNeighborList(int natoms, int npairs, int* pairs,
 }
 
 
+int
+isin(int value, int size, int* arr)
+{
+  for(int i=0;i<size; i++){
+    if (arr[i] == value){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+
 void Test()
 {
   float cell[3];
@@ -100,27 +112,25 @@ void Test()
   MakeNeighborList(nOatoms, nPairsAB, pairsAB, nneiAB, neiAB);
   MakeNeighborList(nOatoms, nPairsAC, pairsAC, nneiAC, neiAC);
   //find triangle PQR that matches the shape
-  int ntri=0;
+  int ntet=0;
   for(int p=0; p<nOatoms; p++){
     for(int i=0; i<nneiA[p]; i++){
       int q = neiA[p][i];
       for(int j=0; j<nneiA[p]; j++){
 	int r = neiA[p][j];
-	int found = 0;
-	for(int k=0; k<nneiAB[q]; k++){
-	  if ( neiAB[q][k] == r ){
-	    found = 1;
-	    break;
+	if ( isin(r, nneiAB[q], neiAB[q] ) ){
+	  for(int k=0; k<nneiC[p]; k++){
+	    int s = neiC[p][k];
+	    if ( isin(s, nneiAC[q], neiAC[q]) && isin(s, nneiAC[r], neiAC[r]) ){
+	      //printf("%d %d %d\n", p,q,r);
+	      ntet += 1;
+	    }
 	  }
-	}
-	if ( found ){
-	  //printf("%d %d %d\n", p,q,r);
-	  ntri += 1;
 	}
       }
     }
   }
-  printf("%d ntri\n", ntri);
+  printf("%d ntet\n", ntet);
   /*
   for(int i=0;i<nPairs;i++){
     int r0 = pairs[i*2+0];
