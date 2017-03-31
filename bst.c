@@ -69,6 +69,15 @@ balance(bnode* root)
     //branch reconnect
     root = insert_(root, branch);
   }
+  else if ( size(root->right) +2 < size(root->left) ){
+    bnode* branch = root;
+    root = root->left;
+    //branch cut
+    branch->size -= root->size;
+    branch->left = NULL;
+    //branch reconnect
+    root = insert_(root, branch);
+  }
   return root;
 }
     
