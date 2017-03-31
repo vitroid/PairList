@@ -21,6 +21,62 @@ int size(bnode* root)
 }
 
 
+
+
+bnode*
+insert_(bnode* root, bnode* branch)
+{
+  if (root == NULL){
+    return branch;
+  }
+  if (root->value == branch->value){
+    //conflict
+    fprintf(stderr, "confliction.\n");
+    exit(1);
+  }
+  if (root->value < branch->value){
+    int orig = size(root->right);
+    root->right = insert_(root->right, branch);
+    int diff = root->right->size - orig;
+    root->size += diff;
+  }
+  else{
+    int orig = size(root->left);
+    root->left = insert_(root->left, branch);
+    int diff = root->left->size - orig;
+    root->size += diff;
+  }
+
+  //if ( abs(size(root->right) - size(root->left)) > 20 ){
+  //  fprintf(stderr, "%d unbalance\n", size(root->right) - size(root->left));
+  //}
+  root = balance(root);
+
+  return root;
+}
+
+
+
+bnode*
+balance(bnode* root)
+{
+  if ( size(root->right) > size(root->left) + 2 ){
+    bnode* branch = root;
+    root = root->right;
+    //branch cut
+    branch->size -= root->size;
+    branch->right = NULL;
+    //branch reconnect
+    root = insert_(root, branch);
+  }
+  return root;
+}
+    
+    
+
+
+
+
 bnode*
 insert(bnode* root, int value)
 {
@@ -36,12 +92,19 @@ insert(bnode* root, int value)
     root->right = insert(root->right, value);
     int diff = root->right->size - orig;
     root->size += diff;
-    return root;
   }
-  int orig = size(root->left);
-  root->left = insert(root->left, value);
-  int diff = root->left->size - orig;
-  root->size += diff;
+  else{
+    int orig = size(root->left);
+    root->left = insert(root->left, value);
+    int diff = root->left->size - orig;
+    root->size += diff;
+  }
+
+  //if ( abs(size(root->right) - size(root->left)) > 20 ){
+  //  fprintf(stderr, "%d unbalance\n", size(root->right) - size(root->left));
+  //}
+  root = balance(root);
+
   return root;
 }
 
@@ -98,4 +161,24 @@ dispose(bnode* root)
 }
 
 
+
+void view(bnode* root){
+  if ( root == NULL )
+    return;
+  printf("%d (size %d) [", root->value, size(root));
+  if (root->left == NULL){
+    printf("- , ");
+  }
+  else{
+    printf("%d, ", root->left->value);
+  }
+  if (root->right == NULL){
+    printf("- ]\n");
+  }
+  else{
+    printf("%d]\n", root->right->value);
+  }
+  view(root->left);
+  view(root->right);
+}
 
