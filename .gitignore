@@ -16,3 +16,10 @@ pairlist-test3
 matcher
 
 test_bst
+6.*
+7.*
+TPPI.*
+*.match
+*.yap
+@*
+.yapviewstack

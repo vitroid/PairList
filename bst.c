@@ -79,8 +79,9 @@ put_in_array(bnode* root, int* array)
 
 int*
 get_array(bnode* root){
-  int* array = (int*) malloc(sizeof(int)*size(root));
+  int* array = (int*) malloc(sizeof(int)*(size(root)+1)); //one extra space.
   put_in_array(root, array);
+  array[size(root)] = -1; //terminator
   return array;
 }
 
