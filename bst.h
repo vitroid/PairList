@@ -16,3 +16,4 @@ int    size(bnode* root);
 int*   put_in_array(bnode* root, int* array);
 int*   get_array(bnode* root);
 void   dispose(bnode* root);
+void   view(bnode* root);

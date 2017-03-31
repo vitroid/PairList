@@ -99,3 +99,23 @@ dispose(bnode* root)
 
 
 
+void view(bnode* root){
+  if ( root == NULL )
+    return;
+  printf("%d (size %d) [", root->value, size(root));
+  if (root->left == NULL){
+    printf("- , ");
+  }
+  else{
+    printf("%d, ", root->left->value);
+  }
+  if (root->right == NULL){
+    printf("- ]\n");
+  }
+  else{
+    printf("%d]\n", root->right->value);
+  }
+  view(root->left);
+  view(root->right);
+}
+
