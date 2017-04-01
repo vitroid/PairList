@@ -319,6 +319,11 @@ int main(int argc, char* argv[])
   MakeNeighborList(nOatoms, nPairsAB, pairsAB, neiAB);
   fprintf(stderr, ":");
   MakeNeighborList(nOatoms, nPairsAC, pairsAC, neiAC);
+  free(prox);
+  free(pairsA);
+  free(pairsC);
+  free(pairsAB);
+  free(pairsAC);
   fprintf(stderr, "Done.\n");
   fprintf(stderr,"%d nProx A\n", nProx);
   fprintf(stderr,"%d nPairs A\n", nPairsA);
@@ -473,11 +478,6 @@ int main(int argc, char* argv[])
   }
   */
   //assert(nPairs==864);
-  free(prox);
-  free(pairsA);
-  free(pairsC);
-  free(pairsAB);
-  free(pairsAC);
 
   free(Oatoms);
 }

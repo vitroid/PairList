@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "bst.h"
-//binary search tree as an implementation of Set type.
+//binary search tree as an implementation of Set of intergers
 
-bnode* new_node(int value){
+
+
+bnode* new_node(VALUETYPE value){
   bnode* node = (bnode*) malloc(sizeof(bnode));
   node->right = node->left = NULL;
   node->value = value;
@@ -12,7 +14,7 @@ bnode* new_node(int value){
 }
 
 
-int size(bnode* root)
+SIZETYPE size(bnode* root)
 {
   if (root==NULL){
     return 0;
@@ -35,15 +37,15 @@ insert_(bnode* root, bnode* branch)
     exit(1);
   }
   if (root->value < branch->value){
-    int orig = size(root->right);
+    SIZETYPE orig = size(root->right);
     root->right = insert_(root->right, branch);
-    int diff = root->right->size - orig;
+    SIZETYPE diff = root->right->size - orig;
     root->size += diff;
   }
   else{
-    int orig = size(root->left);
+    SIZETYPE orig = size(root->left);
     root->left = insert_(root->left, branch);
-    int diff = root->left->size - orig;
+    SIZETYPE diff = root->left->size - orig;
     root->size += diff;
   }
 
@@ -87,7 +89,7 @@ balance(bnode* root)
 
 
 bnode*
-insert(bnode* root, int value)
+insert(bnode* root, VALUETYPE value)
 {
   if (root == NULL){
     return new_node(value);
@@ -97,15 +99,15 @@ insert(bnode* root, int value)
     return root;
   }
   if (root->value < value){
-    int orig = size(root->right);
+    SIZETYPE orig = size(root->right);
     root->right = insert(root->right, value);
-    int diff = root->right->size - orig;
+    SIZETYPE diff = root->right->size - orig;
     root->size += diff;
   }
   else{
-    int orig = size(root->left);
+    SIZETYPE orig = size(root->left);
     root->left = insert(root->left, value);
-    int diff = root->left->size - orig;
+    SIZETYPE diff = root->left->size - orig;
     root->size += diff;
   }
 
@@ -119,8 +121,8 @@ insert(bnode* root, int value)
 
 
 
-int
-lookup(bnode* root, int value)
+BOOL
+lookup(bnode* root, VALUETYPE value)
 {
   if (root == NULL){
     return FALSE;
@@ -136,8 +138,8 @@ lookup(bnode* root, int value)
 
 
 
-int*
-put_in_array(bnode* root, int* array)
+VALUETYPE*
+put_in_array(bnode* root, VALUETYPE* array)
 {
   if (root == NULL){
     return array;
@@ -149,9 +151,11 @@ put_in_array(bnode* root, int* array)
 }
 
 
-int*
+VALUETYPE*
 get_array(bnode* root){
-  int* array = (int*) malloc(sizeof(int)*(size(root)+1)); //one extra space.
+  //one extra space for a terminator, but that is also used for a trick.
+  //Please do not remove the last one element of the array.
+  VALUETYPE* array = (VALUETYPE*) malloc(sizeof(VALUETYPE)*(size(root)+1)); 
   put_in_array(root, array);
   array[size(root)] = -1; //terminator
   return array;

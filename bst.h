@@ -1,20 +1,26 @@
 #define TRUE 1
 #define FALSE 0
 
+
+typedef int VALUETYPE;
+typedef int SIZETYPE;
+typedef int BOOL;
+
+
 typedef struct bnode_ {
   struct bnode_* left;
   struct bnode_* right;
-  int value;
-  int size;
+  VALUETYPE value;
+  SIZETYPE size;
 } bnode;
 
 
-bnode* new_node(int value);
-bnode* insert(bnode* root, int value);
-int    lookup(bnode* root, int value);
-int    size(bnode* root);
-int*   put_in_array(bnode* root, int* array);
-int*   get_array(bnode* root);
-void   dispose(bnode* root);
-void   view(bnode* root);
-bnode* balance(bnode* root);
+bnode*     new_node(VALUETYPE value);
+bnode*     insert(bnode* root, VALUETYPE value);
+BOOL       lookup(bnode* root, VALUETYPE value);
+SIZETYPE   size(bnode* root);
+VALUETYPE* put_in_array(bnode* root, VALUETYPE* array);
+VALUETYPE* get_array(bnode* root);
+void       dispose(bnode* root);
+void       view(bnode* root);
+bnode*     balance(bnode* root);
