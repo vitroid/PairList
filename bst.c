@@ -153,11 +153,10 @@ put_in_array(bnode* root, VALUETYPE* array)
 
 VALUETYPE*
 get_array(bnode* root){
-  //one extra space for a terminator, but that is also used for a trick.
+  //one extra space that is used for a trick.
   //Please do not remove the last one element of the array.
   VALUETYPE* array = (VALUETYPE*) malloc(sizeof(VALUETYPE)*(size(root)+1)); 
   put_in_array(root, array);
-  array[size(root)] = -1; //terminator
   return array;
 }
 
