@@ -23,3 +23,5 @@ TPPI.*
 *.yap
 @*
 .yapviewstack
+
+pairlist-test2\.data
