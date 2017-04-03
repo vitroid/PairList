@@ -254,7 +254,7 @@ MakeNeighborList(int natoms, int npairs, int* pairs,
 int main(int argc, char* argv[])
 {
   //usage: matcher grofile error msdmax
-  //typical values: error = 0.02, msdmax == 0.9 for TPPI
+  //typical values: error = 0.03, msdmax == 0.35 for TPPI
   if ( argc != 5 ){
     fprintf(stderr, "usage: %s grofile error msdmax\n", argv[0]);
     exit(1);
@@ -417,7 +417,7 @@ int main(int argc, char* argv[])
 		}
 		msd += dmin;
 	      }
-	      if ( msd < msdmax ){
+	      if ( msd < msdmax * nunitatoms / 100 ){  //msd in AA
 		/*
 		for(int l=0; l<nunitatoms; l++){
 		  float u[3];

@@ -22,15 +22,15 @@ TPPI.ar3r:
 7.ar3r:
 	genice 7 --rep 1 1 1 --format r > 7.ar3r
 %.TPPI.match: %.gro TPPI.ar3r
-	./matcher $< TPPI.ar3r 0.03 0.25 > $@
+	./matcher $< TPPI.ar3r 0.03 0.35 > $@
 %.TPPI.match.yap: %.TPPI.match TPPI.ar3r
 	python3 ./match2yap.py $*.gro TPPI.ar3r < $< > $@
 %.6.match: %.gro 6.ar3r
-	./matcher $< 6.ar3r 0.02 0.25 > $@
+	./matcher $< 6.ar3r 0.03 0.35 > $@
 %.6.match.yap: %.6.match 6.ar3r
 	python3 ./match2yap.py $*.gro 6.ar3r < $< > $@
 %.7.match: %.gro 7.ar3r
-	./matcher $< 7.ar3r 0.02 0.25 > $@
+	./matcher $< 7.ar3r 0.03 0.35 > $@
 %.7.match.yap: %.7.match 7.ar3r
 	python3 ./match2yap.py $*.gro 7.ar3r < $< > $@
 clean:
