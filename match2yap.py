@@ -59,7 +59,7 @@ for a in unitatoms:
         orig = a
     
     
-s = ""
+#s = ""
 for line in sys.stdin:
     cols = line.split()
     N = int(cols[0])
@@ -71,11 +71,22 @@ for line in sys.stdin:
     boxorigin = np.dot(orig, rotmat)
     origin   -= boxorigin #corner of the cell
     box       = np.dot(unitcell, rotmat)
-    print(box)
-    for v in (np.zeros(3), box[1], box[2], box[1]+box[2]):
-        s += yp.Line(v+origin, v+origin+box[0])
-    for v in (np.zeros(3), box[0], box[2], box[0]+box[2]):
-        s += yp.Line(v+origin, v+origin+box[1])
-    for v in (np.zeros(3), box[0], box[1], box[0]+box[1]):
-        s += yp.Line(v+origin, v+origin+box[2])
-print(s)
+    #print(box)
+    #for v in (np.zeros(3), box[1], box[2], box[1]+box[2]):
+    #    print(yp.Line(v+origin, v+origin+box[0]), end="")
+    #    #s += yp.Line(v+origin, v+origin+box[0])
+    #for v in (np.zeros(3), box[0], box[2], box[0]+box[2]):
+    #    print(yp.Line(v+origin, v+origin+box[1]), end="")
+    #    #s += yp.Line(v+origin, v+origin+box[1])
+    #for v in (np.zeros(3), box[0], box[1], box[0]+box[1]):
+    #    print(yp.Line(v+origin, v+origin+box[2]), end="")
+    #    #s += yp.Line(v+origin, v+origin+box[2])
+    print(yp.Color(2), end="")
+    print(yp.Polygon([origin,origin+box[0],origin+box[1]]), end="")
+    print(yp.Color(3), end="")
+    print(yp.Polygon([origin,origin+box[1],origin+box[2]]), end="")
+    print(yp.Color(4), end="")
+    print(yp.Polygon([origin,origin+box[2],origin+box[0]]), end="")
+    #print(yp.Color(5), end="")
+    #print(yp.Palygon([origin,origin+box[2],origin+box[0]]), end="")
+#print(s)
