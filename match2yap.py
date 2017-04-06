@@ -46,6 +46,17 @@ def LoadAR3R(file):
     #the last line is cell shape
     return cell, Os
 
+#Put different colors for different vectors
+def direction2color(v, digitize=4):
+    x = np.array([1.0,0.0,0.0])
+    y = np.array([0.0,1.0,0.0])
+    z = np.array([0.0,0.0,1.0])
+    e = v / np.linalg.norm(v)
+    R = int(abs(np.dot(x,e))*digitize)
+    G = int(abs(np.dot(y,e))*digitize)
+    B = int(abs(np.dot(z,e))*digitize)
+    return R,G,B
+
 
 def drawbox(origin, box):
     #print(box)
@@ -94,6 +105,7 @@ for a in unitatoms:
         orig = a
     
 #s = ""
+palette = dict()
 matched = set()
 for line in sys.stdin:
     #parse the line
@@ -110,7 +122,12 @@ for line in sys.stdin:
     origin   -= boxorigin #corner of the cell
     box       = np.dot(unitcell, rotmat)
     uatoms    = np.dot(unitatoms, rotmat) + origin
-    print(yp.Color(3),end="")
+    #print(yp.Color(3),end="")
+    color = direction2color(rotmat[0]+rotmat[1]+rotmat[2])
+    if color not in palette:
+        palette[color] = len(palette)+5
+        print(yp.SetPalette(palette[color],color[0]*255//3,color[1]*255//3,color[2]*255//3),end="")
+    print(yp.Color(palette[color]), end="")
     print(yp.Layer(1),end="")
     drawbox(origin,box)
 
@@ -119,6 +136,8 @@ for line in sys.stdin:
 
     print(yp.Layer(3),end="")
     print(yp.Size(0.15),end="")
+    
+    print(yp.Color(4), end="")
     drawatoms(uatoms)
     for i in range(len(uatoms)):
         print(yp.Line(uatoms[i], atoms[members[i]]),end="")

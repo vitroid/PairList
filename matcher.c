@@ -45,7 +45,7 @@ LoadGRO(FILE* file, float** Oatoms, float* cell){
     int   id;
     char  label[99],label2[99];
     sscanf(line, "%10s%5s%5d%8f%8f%8f\n", label, label2, &id, &x, &y, &z);
-    if ( strncasecmp( label2, "Ow", 2 ) == 0 ){
+    if ( label2[0] == 'O' ){
       (*Oatoms)[nOatoms*3+0] = x;
       (*Oatoms)[nOatoms*3+1] = y;
       (*Oatoms)[nOatoms*3+2] = z;
@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
   //usage: matcher grofile error msdmax
   //typical values: error = 0.03, msdmax == 0.35 for TPPI
   if ( argc != 5 ){
-    fprintf(stderr, "usage: %s grofile error msdmax\n", argv[0]);
+    fprintf(stderr, "usage: %s grofile template.ar3r error msdmax\n", argv[0]);
     exit(1);
   }
   float cell[3];
