@@ -58,10 +58,13 @@ def direction2color(v, digitize=4):
     return R,G,B
 
 
-def drawbox(origin, box):
+def drawbox(origin, box, halfshift=True):
     #print(box)
-    center = (box[0] + box[1] + box[2])/2
-    ori = origin - center
+    if halfshift:
+        center = (box[0] + box[1] + box[2])/2
+        ori = origin - center
+    else:
+        ori = origin
     for v in (np.zeros(3), box[1], box[2], box[1]+box[2]):
         print(yp.Line(v+ori, v+ori+box[0]), end="")
         #s += yp.Line(v+ori, v+ori+box[0])
@@ -90,9 +93,22 @@ def drawatoms(atoms, members=None):
         for i in members:
             print(yp.Circle(atoms[i]),end="")
 
-
+every = 1
+if sys.argv[1] == "-e":
+    every = int(sys.argv[2])
+    sys.argv.pop(1)
+    sys.argv.pop(1)
+    
 cell, atoms = LoadGRO(open(sys.argv[1]))
 unitcell, unitatoms = LoadAR3R(open(sys.argv[2]))
+mode = "R"
+if len(sys.argv) > 3:
+    mode = sys.argv[3]
+
+print(yp.Color(2),end="")
+print(yp.Layer(1),end="")
+origin = np.zeros(3)
+drawbox(origin,cell,halfshift=False)
 #in absolute coord
 unitatoms = np.dot(unitatoms, unitcell)
 #print(unitatoms)
@@ -107,46 +123,47 @@ for a in unitatoms:
 #s = ""
 palette = dict()
 matched = set()
-for line in sys.stdin:
+for nline,line in enumerate(sys.stdin):
     #parse the line
     cols = line.split()
     N = int(cols[0])
     members = [int(x) for x in cols[1:N+1]]
-    matched |= set(members)
     msd     = float(cols[N+1])
     origin  = atoms[int(cols[N+2])].copy()  #atom at the matching center
     rotmat  = np.array([float(x) for x in cols[N+3:N+12]]).reshape((3,3))
-    print(rotmat)
     #draw matched box
     boxorigin = np.dot(orig, rotmat)
     origin   -= boxorigin #corner of the cell
     box       = np.dot(unitcell, rotmat)
     uatoms    = np.dot(unitatoms, rotmat) + origin
     #print(yp.Color(3),end="")
-    color = direction2color(rotmat[0]+rotmat[1]+rotmat[2])
+    if mode == "R":
+        color = direction2color(rotmat[0]+rotmat[1]+rotmat[2])
+    elif mode == "T":
+        color = direction2color(rotmat[2])
+    else:
+        color = (0,3,0) #green
     if color not in palette:
         palette[color] = len(palette)+5
         print(yp.SetPalette(palette[color],color[0]*255//3,color[1]*255//3,color[2]*255//3),end="")
-    print(yp.Color(palette[color]), end="")
-    print(yp.Layer(1),end="")
-    drawbox(origin,box)
+    matched |= set(members)
+    if every != 0 and nline % every == 0:
+        print(yp.Color(palette[color]), end="")
+        print(yp.Layer(1),end="")
+        drawbox(origin,box)
 
-    print(yp.Layer(2),end="")
-    drawbox2(origin,box)
+        print(yp.Layer(2),end="")
+        drawbox2(origin,box)
 
-    print(yp.Layer(3),end="")
-    print(yp.Size(0.15),end="")
+        print(yp.Layer(3),end="")
+        print(yp.Size(0.15),end="")
     
-    print(yp.Color(4), end="")
-    drawatoms(uatoms)
-    for i in range(len(uatoms)):
-        print(yp.Line(uatoms[i], atoms[members[i]]),end="")
-    #drawbox2(origin,box)
-    #print(yp.Color(5), end="")
-    #print(yp.Palygon([origin,origin+box[2],origin+box[0]]), end="")
-#print(s)
+        print(yp.Color(4), end="")
+        drawatoms(uatoms)
+        for i in range(len(uatoms)):
+            print(yp.Line(uatoms[i], atoms[members[i]]),end="")
 
 print(yp.Size(0.1),end="")
-print(yp.Color(0),end="")
+print(yp.Color(4),end="")
 print(yp.Layer(3),end="")
 drawatoms(atoms, members=matched)
