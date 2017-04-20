@@ -1,3 +1,5 @@
+CC=c99
+LDFLAGS=-lm
 OBJ=pairlist.o pairlist-test pairlist-test2 pairlist-test3
 ALL=$(OBJ) pairlist-test2.data pairlist-test3.gro
 all: $(ALL)
@@ -62,6 +64,10 @@ pub:
 	for ss in init 1140ps 4740ps; do for ice in 6 7 PPI TPPI; do echo $$ss.rect.$$ice.match.yap;done;done | xargs make -k -j 8
 	for ss in init 1140ps 4740ps; do  echo $$ss.rect.7+TPPI.yap;done | xargs make -k -j 8
 push:
-	rsync -av *.ar3r *py 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice7_6e04_300K
+	rsync -av *.c *.h *.ar3r *py 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice7_6e04_300K
+	rsync -av *.c *.h *.ar3r *py 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice6_6e04_300K
 pull:
-	rsync -av 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice7_6e04_300K/*.yap .
+	rsync -av --include="*/" --include="*.yap" --exclude="*" 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice7_6e04_300K .
+	rsync -av --include="*/" --include="*.yap" --exclude="*" 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice6_6e04_300K .
+mov:
+	ffmpeg -r 5 -i 'yaplot00_%05d.png' -vf "pad=width=512:height=1024:x=0:y=0:color=white" -pix_fmt yuv420p -crf 24 cat.mp4
