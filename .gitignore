@@ -31,3 +31,13 @@ pairlist-test2\.data
 *.png
 
 slide-matcher
+
+*.eps
+
+*.rdf
+
+*.pdf
+
+*.cif
+
+*.gro

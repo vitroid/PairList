@@ -65,9 +65,22 @@ pub:
 	for ss in init 1140ps 4740ps; do  echo $$ss.rect.7+TPPI.yap;done | xargs make -k -j 8
 push:
 	rsync -av *.c *.h *.ar3r *py 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice7_6e04_300K
-	rsync -av *.c *.h *.ar3r *py 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice6_6e04_300K
+	rsync -av *.c *.h *.ar3r *py 192.168.3.3:/r3/matto/MovieWorkArea/iceT/ice6_6e04_300K
+	rsync -av *.c *.h *.ar3r *py 192.168.3.3:/r3/matto/MovieWorkArea/iceT/PPI_6e04_300K
+	rsync -av *.c *.h *.ar3r *py 192.168.3.3:/r3/matto/MovieWorkArea/iceT/TPPI_6e04_300K
 pull:
 	rsync -av --include="*/" --include="*.yap" --exclude="*" 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice7_6e04_300K .
 	rsync -av --include="*/" --include="*.yap" --exclude="*" 192.168.3.3:/r3/matto/MovieWorkArea/iceT/n_ice6_6e04_300K .
 mov:
 	ffmpeg -r 5 -i 'yaplot00_%05d.png' -vf "pad=width=512:height=1024:x=0:y=0:color=white" -pix_fmt yuv420p -crf 24 cat.mp4
+
+
+%.rdf: %.gro
+	python3 ./rdf.py < $< > $@
+rdf:
+	sh rdf.sh
+#Requires the newest cif2ice
+PPI_R-3_333.gro: PPI_R-3.cif
+	cif2ice --rep 3 3 3 -g $< > $@
+TPPI_223.gro: TPPI.cif
+	cif2ice --rep 2 2 3 -g $< > $@

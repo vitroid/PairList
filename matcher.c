@@ -299,70 +299,31 @@ int main(int argc, char* argv[])
   }
   fprintf(stderr,"System   %d %f %f %f\n", nOatoms, cell[0], cell[1], cell[2]);
   fprintf(stderr,"Template %d %f %f %f\n", nunitatoms, unitcell[0], unitcell[1], unitcell[2]);
-  //for(int i=0;i<nunitatoms;i++){
-  //  fprintf(stderr,"%f %f %f\n", unitatoms[i*3+0],unitatoms[i*3+1],unitatoms[i*3+2]);
-  //}
   //Find the tetrahedra of a, b, and c cell vectors
   float a = unitcell[0];
   //float b   same as a
   float c = unitcell[2];
   float ab = sqrt(a*a*2);
   float ac = sqrt(a*a + c*c);
-  //int* prox;
-  //int* pairsA;
-  //int* pairsC;
-  //int* pairsAB;
-  //int* pairsAC;
   //atoms of the proximity
   fprintf(stderr, "Preparing the neighbor lists.");
-  //int nProx   = pairlist(nOatoms, Oatoms, nOatoms, Oatoms, 0.0, radius*(1+err), cell, &prox);
   fprintf(stderr,".");
   bnode** nei = NeighborAtoms(nOatoms, Oatoms, 0.0, radius*(1+err), cell);
   //pair lists
   fprintf(stderr, ".");
-  //int nPairsA = pairlist(nOatoms, Oatoms, nOatoms, Oatoms, a*(1-err), a*(1+err), cell, &pairsA);
   bnode** neiA = NeighborAtoms(nOatoms, Oatoms, a*(1-err), a*(1+err), cell);
   fprintf(stderr, ".");
-  //int nPairsC = pairlist(nOatoms, Oatoms, nOatoms, Oatoms, c*(1-err), c*(1+err), cell, &pairsC);
   bnode** neiC = NeighborAtoms(nOatoms, Oatoms, c*(1-err), c*(1+err), cell);
   fprintf(stderr, ".");
-  //int nPairsAB = pairlist(nOatoms, Oatoms, nOatoms, Oatoms, ab*(1-err), ab*(1+err), cell, &pairsAB);
   bnode** neiAB = NeighborAtoms(nOatoms, Oatoms, ab*(1-err), ab*(1+err), cell);
   fprintf(stderr, ".");
-  //int nPairsAC = pairlist(nOatoms, Oatoms, nOatoms, Oatoms, ac*(1-err), ac*(1+err), cell, &pairsAC);
   bnode** neiAC = NeighborAtoms(nOatoms, Oatoms, ac*(1-err), ac*(1+err), cell);
-  //bnode* nei[nOatoms];
-  //bnode* neiA[nOatoms];
-  //bnode* neiC[nOatoms];
-  //bnode* neiAB[nOatoms];
-  //bnode* neiAC[nOatoms];
-  //fprintf(stderr, ":");
-  //MakeNeighborList(nOatoms, nProx, prox, nei);
-  //fprintf(stderr, ":");
-  //MakeNeighborList(nOatoms, nPairsA, pairsA, neiA);
-  //fprintf(stderr, ":");
-  //MakeNeighborList(nOatoms, nPairsC, pairsC, neiC);
-  //fprintf(stderr, ":");
-  //MakeNeighborList(nOatoms, nPairsAB, pairsAB, neiAB);
-  //fprintf(stderr, ":");
-  //MakeNeighborList(nOatoms, nPairsAC, pairsAC, neiAC);
   fprintf(stderr, "Done.\n");
-  //free(prox);
-  //free(pairsA);
-  //free(pairsC);
-  //free(pairsAB);
-  //free(pairsAC);
-  //fprintf(stderr,"%d nProx A\n", nProx);
-  //fprintf(stderr,"%d nPairs A\n", nPairsA);
-  //fprintf(stderr,"%d nPairs C\n", nPairsC);
-  //fprintf(stderr,"%d nPairs AB\n", nPairsAB);
-  //fprintf(stderr,"%d nPairs AC\n", nPairsAC);
   //find triangle PQR that matches the shape
   int ntet=0;
   for(int p=0; p<nOatoms; p++){
     fprintf(stderr, "\r%.1f %%", p*100./nOatoms);
     int nnA = size(neiA[p]);
-    //fprintf(stderr,"size of neiA is %d\n", nnA);
     int* nA = get_array(neiA[p]);
     for(int i=0; i<nnA; i++){
       int q = nA[i];
@@ -374,8 +335,6 @@ int main(int argc, char* argv[])
 	  for(int k=0; k<nnC; k++){
 	    int s = nC[k];
 	    if ( lookup(neiAC[q], s) && lookup(neiAC[r], s) ){
-	      //fprintf(stderr,"%d %d %d\n", p,q,r);
-
 	      float dq[3], dr[3], ds[3];
 	      for(int d=0;d<3;d++){
 		dq[d] = Oatoms[q*3+d] - Oatoms[p*3+d];
@@ -385,11 +344,6 @@ int main(int argc, char* argv[])
 		ds[d] = Oatoms[s*3+d] - Oatoms[p*3+d];
 		ds[d] -= floor( ds[d] / cell[d] + 0.5 ) * cell[d];
 	      }
-	      /*
-	      yaplot_linerel(&Oatoms[p*3], dq);
-	      yaplot_linerel(&Oatoms[p*3], dr);
-	      yaplot_linerel(&Oatoms[p*3], ds);
-	      */
 	      //mathcing without alignment.
 	      //find the rotation matrix from 
 	      //A is the unit cell
@@ -409,9 +363,6 @@ int main(int argc, char* argv[])
 	      mul(dq, unitcelli[0], Rx);
 	      mul(dr, unitcelli[1], Ry);
 	      mul(ds, unitcelli[2], Rz);
-	      //printf("x0 %f %f %f %f\n", Rx[0],Rx[1],Rx[2], dot(Rx,Rx));
-	      //printf("y0 %f %f %f %f\n", Ry[0],Ry[1],Ry[2], dot(Ry,Ry));
-	      //printf("z0 %f %f %f %f\n%f\n", Rz[0],Rz[1],Rz[2], dot(Rz,Rz), det(Rx,Ry,Rz));
 	      regularize(Rx,Ry,Rz);
 	      float Tx[3],Ty[3],Tz[3];
 	      Tx[0] = Rx[0];
@@ -423,9 +374,6 @@ int main(int argc, char* argv[])
 	      Tz[0] = Rx[2];
 	      Tz[1] = Ry[2];
 	      Tz[2] = Rz[2];
-	      //printf("x1 %f %f %f %f\n", Rx[0],Rx[1],Rx[2], dot(Rx,Rx));
-	      //printf("y1 %f %f %f %f\n", Ry[0],Ry[1],Ry[2], dot(Ry,Ry));
-	      //printf("z1 %f %f %f %f\n%f\n\n", Rz[0],Rz[1],Rz[2],dot(Rz,Rz), det(Rx,Ry,Rz));
 	      //We get R' by regularization, and B' = A R'
 	      //float ARx[3], ARy[3], ARz[3];
 	      //mul(Rx, unitcell[0], ARx);
@@ -438,12 +386,6 @@ int main(int argc, char* argv[])
 	      int partners[nunitatoms];
 	      for(int l=0; l<nunitatoms; l++){
 		float u[3];
-		//u[0] = dot(&unitatoms[l*3], ARx) + Oatoms[p*3+0];
-		//u[1] = dot(&unitatoms[l*3], ARy) + Oatoms[p*3+1];
-		//u[2] = dot(&unitatoms[l*3], ARz) + Oatoms[p*3+2];
-		//u[0] = dot(&unitatoms[l*3], Rx) + Oatoms[p*3+0];
-		//u[1] = dot(&unitatoms[l*3], Ry) + Oatoms[p*3+1];
-		//u[2] = dot(&unitatoms[l*3], Rz) + Oatoms[p*3+2];
 		u[0] = dot(&unitatoms[l*3], Tx) + Oatoms[p*3+0];
 		u[1] = dot(&unitatoms[l*3], Ty) + Oatoms[p*3+1];
 		u[2] = dot(&unitatoms[l*3], Tz) + Oatoms[p*3+2];
@@ -461,21 +403,6 @@ int main(int argc, char* argv[])
 		msd += dmin;
 	      }
 	      if ( msd / nunitatoms * 100 < msdmax ){  //msd in AA
-		/*
-		for(int l=0; l<nunitatoms; l++){
-		  float u[3];
-		  u[0] = dot(&unitatoms[l*3], ARx) + Oatoms[p*3+0];
-		  u[1] = dot(&unitatoms[l*3], ARy) + Oatoms[p*3+1];
-		  u[2] = dot(&unitatoms[l*3], ARz) + Oatoms[p*3+2];
-		  printf("r 0.01\n");
-		  printf("@ 3\n");
-		  printf("c %f %f %f\n", u[0],u[1],u[2]);
-		  int pa = partners[l];
-		  printf("c %f %f %f\n", Oatoms[pa*3+0],Oatoms[pa*3+1],Oatoms[pa*3+2]);
-		  printf("l %f %f %f %f %f %f\n", u[0],u[1],u[2], Oatoms[pa*3+0],Oatoms[pa*3+1],Oatoms[pa*3+2]);
-		}
-		exit(0);
-		*/
 		printf("%d ", nunitatoms);
 		for(int l=0;l<nunitatoms;l++){
 		  printf("%d ", partners[l]);
@@ -507,20 +434,6 @@ int main(int argc, char* argv[])
     dispose(neiAC[i]);
   }
   fprintf(stderr,"%d ntet\n", ntet);
-  /*
-  for(int i=0;i<nPairs;i++){
-    int r0 = pairs[i*2+0];
-    int r1 = pairs[i*2+1];
-    float sum2 = 0.0;
-    for(int d=0;d<3;d++){
-      float delta = Oatoms[r0*3+d] - Oatoms[r1*3+d];
-      delta -= floor( delta / cell[d] + 0.5 ) * cell[d];
-      sum2 += delta*delta;
-    }
-    fprintf(stderr,"%d %d %f\n", r0,r1, sqrt(sum2));
-  }
-  */
-  //assert(nPairs==864);
 
   free(Oatoms);
 }
