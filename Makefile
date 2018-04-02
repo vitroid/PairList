@@ -14,11 +14,11 @@ all: $(ALL)
 pairlist-test2.data:
 	genice --format q --rep 3 3 3 1h --water tip4p > $@
 pairlist-test3.gro: Makefile
-	genice --format g --rep 20 20 20  1h > $@
+	genice --format g --rep 10 10 10  1h > $@
 
 build.:
 	python setup.py build_ext --inplace
 
 
 clean:
-	-rm $(ALL)
+	-rm $(ALL) *.so *~
