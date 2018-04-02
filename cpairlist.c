@@ -23,7 +23,7 @@ static PyMethodDef module_methods[] = {
 
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
-        "pairlist",
+        "cpairlist",
         NULL,
         -1,
         module_methods,
@@ -35,7 +35,7 @@ static struct PyModuleDef moduledef = {
 
 
 //my initializer
-PyMODINIT_FUNC PyInit_pairlist(void) {
+PyMODINIT_FUNC PyInit_cpairlist(void) {
   PyObject *m;
   import_array();
   m = PyModule_Create(&moduledef);
