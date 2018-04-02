@@ -16,5 +16,9 @@ pairlist-test2.data:
 pairlist-test3.gro: Makefile
 	genice --format g --rep 20 20 20  1h > $@
 
+build.:
+	python setup.py build_ext --inplace
+
+
 clean:
 	-rm $(ALL)
