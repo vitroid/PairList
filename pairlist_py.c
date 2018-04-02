@@ -12,10 +12,13 @@
 #include "pairlist.h"
 
 static PyObject *pairs(PyObject *self, PyObject* args);
+static PyObject *pairs2(PyObject *self, PyObject* args);
 
 static PyMethodDef module_methods[] = {
   {"pairs", pairs, METH_VARARGS,
    "Rough neighbor list from given fractional coordinates of the particles and a grid."},
+  {"pairs2", pairs2, METH_VARARGS,
+   "Rough neighbor list from given two fractional coordinates of the different particles and a grid."},
   {NULL, NULL, 0, NULL}};
 
 static struct PyModuleDef moduledef = {
@@ -109,6 +112,41 @@ static PyObject *pairs(PyObject *self, PyObject* args) {
   double* a = (double*)rpos->data;
   int* pairs;
   int npairs = Pairs(n, a, ngrid, &pairs);
+  //pairs is allocated.
+
+  // return the array as a numpy array (numpy will free it later)
+  npy_intp dims[2] = {npairs,2};
+  PyObject *narray = PyArray_SimpleNewFromData(2, dims, NPY_INT, pairs);
+  // this is the critical line - tell numpy it has to free the data
+  PyArray_ENABLEFLAGS((PyArrayObject*)narray, NPY_ARRAY_OWNDATA);
+  return narray;
+}
+
+
+
+static PyObject *pairs2(PyObject *self, PyObject* args) {
+  // expect two arguments.
+  PyArrayObject *rpos0, *rpos1;
+  int n0,m0, n1,m1,ngrid[3];
+  
+  /* Parse tuples separately since args will differ between C fcns */
+  if (!PyArg_ParseTuple(args, "O!O!iii", &PyArray_Type, &rpos0,
+			&PyArray_Type, &rpos1, &ngrid[0], &ngrid[1], &ngrid[2])) return NULL;
+  if (NULL == rpos0) return NULL;
+  if (NULL == rpos1) return NULL;
+  if (not_doublematrix(rpos0)) return NULL;
+  if (not_doublematrix(rpos1)) return NULL;
+
+  /* Get the dimensions of the input */
+  n0=rpos0->dimensions[0];
+  m0=rpos0->dimensions[1];
+  n1=rpos1->dimensions[0];
+  m1=rpos1->dimensions[1];
+
+  double* a0 = (double*)rpos0->data;
+  double* a1 = (double*)rpos1->data;
+  int* pairs;
+  int npairs = Pairs2(n0, a0, n1, a1, ngrid, &pairs);
   //pairs is allocated.
 
   // return the array as a numpy array (numpy will free it later)
