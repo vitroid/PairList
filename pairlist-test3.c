@@ -28,13 +28,13 @@ Test(){
     int   id;
     char  label[99],label2[99];
     sscanf(line, "%10s%5s%5d%8f%8f%8f\n", label, label2, &id, &x, &y, &z);
-    if ( strncmp( label2, "HW", 2 ) == 0 ){
+    if ( strncmp( label2, "H", 2 ) == 0 ){
       Hatoms[nHatoms*3+0] = x;
       Hatoms[nHatoms*3+1] = y;
       Hatoms[nHatoms*3+2] = z;
       nHatoms ++;
     }
-    else if ( strncmp( label2, "OW", 2 ) == 0 ){
+    else if ( strncmp( label2, "O", 2 ) == 0 ){
       Oatoms[nOatoms*3+0] = x;
       Oatoms[nOatoms*3+1] = y;
       Oatoms[nOatoms*3+2] = z;
