@@ -12,3 +12,7 @@ pairlist-test3
 pairlist-test2
 
 pairlist-test3
+*.data
+*.gro
+ 
+*.so

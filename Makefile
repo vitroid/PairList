@@ -17,8 +17,11 @@ pairlist-test3.gro: Makefile
 	genice --format g --rep 10 10 10  1h > $@
 
 build.:
+	-rm *.so
+	-rm -rf build
 	python setup.py build_ext --inplace
-
 
 clean:
 	-rm $(ALL) *.so *~
+	-rm -rf build
+

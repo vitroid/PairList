@@ -8,11 +8,11 @@
 #define ADDRESS(x,y,z) (((z)*GY + (y))*GX + (x))
 #define True 1
 #define False 0
-int pairlist1(int nAtoms, float *atoms, float lower, float higher, float cell[3], int **pairs);
-int pairlist2(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float lower, float higher, float cell[3], int **pairs);
+int pairlist1(int nAtoms, PL_FLOAT *atoms, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs);
+int pairlist2(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs);
 
 int
-pairlist(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float lower, float higher, float cell[3], int **pairs)
+pairlist(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 {
   if ( ( nAtoms1 == 0 ) || (atoms1 == NULL) || ( atoms0 == atoms1) ){
     if ( atoms0 == atoms1)
@@ -81,7 +81,7 @@ returns:
 
 //Returns the rough neighbor list
 int
-Pairs(int npos, float* rpos, int ngrid[3], int **pairs)
+Pairs(int npos, PL_FLOAT* rpos, int ngrid[3], int **pairs)
 {
 /* 
 given:
@@ -109,7 +109,6 @@ returns:
     }
     nResidents[ADDRESS(grid[0],grid[1],grid[2])] ++;
   }
-
   //make the resident list
   //resident list is serialized to reduce the memory usage
   //head pointer to the list of residents in a grid cell is in headOfList.
@@ -158,18 +157,21 @@ returns:
   }
   //it is not a rough estimate.
   //printf("Estim: %d\n", estim);
-  *pairs = (int*) malloc(sizeof(int) * estim * 2);
+  *pairs = (int*) malloc(sizeof(int) * (estim * 2+1000));
   int nPairs=0;
   for(int i=0;i<nGridPairs;i++){
     int g0 = gridPairs[i*2+0];
+    //printf("g0 %d\n", g0);
     for(int j=0; j<nResidents[g0]; j++){
       int r0 = residents[heads[g0] + j];
       int g1 = gridPairs[i*2+1];
+      //printf("g1 %d\n", g1);
       for(int k=0; k<nResidents[g1]; k++){
         int r1 = residents[heads[g1] + k];
 	(*pairs)[nPairs*2+0] = r0;
 	(*pairs)[nPairs*2+1] = r1;
 	nPairs ++;
+	//printf("%d\n", nPairs);
       }
     }
   }
@@ -185,15 +187,15 @@ returns:
     }
   }
   //deallocate allocated memories
-  free(gridPairs);
   //printf("Strict: %d\n", nPairs);
+  free(gridPairs);
   return nPairs;
 }
   
 
 
 int
-Pairs2(int npos0, float *rpos0, int npos1, float *rpos1, int ngrid[3], int **pairs)
+Pairs2(int npos0, PL_FLOAT *rpos0, int npos1, PL_FLOAT *rpos1, int ngrid[3], int **pairs)
 /* 
 given:
     npos0: number of atoms of component 0
@@ -206,7 +208,6 @@ returns:
     pairs: newly allocated list of pairs
 */
 {
-  int test = 0;
   //determine the grid size
   const int GX = ngrid[0];
   const int GY = ngrid[1];
@@ -326,7 +327,7 @@ returns:
 
 
 int
-pairlist1(int nAtoms, float *atoms, float lower, float higher, float cell[3], int **pairs)
+pairlist1(int nAtoms, PL_FLOAT *atoms, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 /* 
 given:
     nAtoms: number of atoms
@@ -338,10 +339,10 @@ returns:
     pairs: newly allocated list of pairs
 */
 {
-  float* rpos = (float*) malloc(sizeof(float)*3*nAtoms);
+  PL_FLOAT* rpos = (PL_FLOAT*) malloc(sizeof(PL_FLOAT)*3*nAtoms);
   for(int i=0; i<nAtoms; i++){
     for(int d=0; d<3; d++){
-      float r = atoms[i*3+d] / cell[d];
+      PL_FLOAT r = atoms[i*3+d] / cell[d];
       r -= floor(r);
       rpos[i*3+d] = r;
     }
@@ -355,9 +356,9 @@ returns:
   for(int head=0; head<npairs; head++){
     int r0 = (*pairs)[head*2];
     int r1 = (*pairs)[head*2+1];
-    float sum = 0.0;
+    PL_FLOAT sum = 0.0;
     for(int d=0;d<3;d++){
-      float delta = rpos[r0*3+d] - rpos[r1*3+d];
+      PL_FLOAT delta = rpos[r0*3+d] - rpos[r1*3+d];
       delta -= floor(delta+0.5);
       delta *= cell[d];
       sum += delta*delta;
@@ -375,7 +376,7 @@ returns:
 
 
 int
-pairlist2(int nAtoms0, float *atoms0, int nAtoms1, float *atoms1, float lower, float higher, float cell[3], int **pairs)
+pairlist2(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 /* 
 given:
     nAtoms0: number of atoms of component 0
@@ -389,18 +390,18 @@ returns:
     pairs: newly allocated list of pairs
 */
 {
-  float* rpos0 = (float*) malloc(sizeof(float)*3*nAtoms0);
+  PL_FLOAT* rpos0 = (PL_FLOAT*) malloc(sizeof(PL_FLOAT)*3*nAtoms0);
   for(int i=0; i<nAtoms0; i++){
     for(int d=0; d<3; d++){
-      float r = atoms0[i*3+d] / cell[d];
+      PL_FLOAT r = atoms0[i*3+d] / cell[d];
       r -= floor(r);
       rpos0[i*3+d] = r;
     }
   }
-  float* rpos1 = (float*) malloc(sizeof(float)*3*nAtoms1);
+  PL_FLOAT* rpos1 = (PL_FLOAT*) malloc(sizeof(PL_FLOAT)*3*nAtoms1);
   for(int i=0; i<nAtoms1; i++){
     for(int d=0; d<3; d++){
-      float r = atoms1[i*3+d] / cell[d];
+      PL_FLOAT r = atoms1[i*3+d] / cell[d];
       r -= floor(r);
       rpos1[i*3+d] = r;
     }
@@ -414,9 +415,9 @@ returns:
   for(int head=0; head<npairs; head++){
     int r0 = (*pairs)[head*2];
     int r1 = (*pairs)[head*2+1];
-    float sum = 0.0;
+    PL_FLOAT sum = 0.0;
     for(int d=0;d<3;d++){
-      float delta = rpos0[r0*3+d] - rpos1[r1*3+d];
+      PL_FLOAT delta = rpos0[r0*3+d] - rpos1[r1*3+d];
       delta -= floor(delta+0.5);
       delta *= cell[d];
       sum += delta*delta;
