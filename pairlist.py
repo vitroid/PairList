@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# even: stable; odd: develop
+# __version__ = "0.1."
 
-####Note: xyz are in coord relative to the cell.
-
-
-from __future__ import print_function
 import math
 import itertools as it
 import numpy as np
 import logging
+from cpairlist import pairs, pairs2
 
 def Address(pos,grid):
     #residents in each grid cell
@@ -28,7 +27,7 @@ def ArrangeAddress(xyz,grid):
 
 
 
-def pairs(xyz,GX,GY,GZ):
+def pairs_py(xyz,GX,GY,GZ):
     grid = np.array([GX,GY,GZ])
     logger = logging.getLogger()
     logger.debug("START Arrange")
@@ -56,7 +55,7 @@ def pairs(xyz,GX,GY,GZ):
                             for b in residents[a2]:
                                 yield a,b
 
-def pairs2(xyz,xyz2,GX,GY,GZ):
+def pairs2_py(xyz,xyz2,GX,GY,GZ):
     grid = np.array([GX,GY,GZ])
     return _pairs_hetero(xyz,xyz2,grid)
 
@@ -86,7 +85,7 @@ def _pairs_hetero(xyz,xyz2,grid):
 
                                 
 #assume xyz and box are numpy.array
-def pairs_fine(xyz,rc,cell,grid,distance=True):
+def pairs_fine_slow(xyz,rc,cell,grid,distance=True):
     logger= logging.getLogger()
     for i,j in pairs(xyz,*grid):
         moli = xyz[i]
@@ -101,6 +100,30 @@ def pairs_fine(xyz,rc,cell,grid,distance=True):
             else:
                 yield i,j
 
+
+# fully numpy style
+def pairs_fine(xyz,rc,cell,grid,distance=True):
+    logger= logging.getLogger()
+    p = pairs(xyz, *grid)
+    idx0 = p[:,0]
+    idx1 = p[:,1]
+    p0 = xyz[idx0]
+    p1 = xyz[idx1]
+    d  = p0 - p1
+    d -= np.floor(d+0.5)
+    a  = np.dot(d,cell)
+    L  = np.linalg.norm(a, axis=1)
+    cond = L<rc
+    # pickup elements satisfying the condition.
+    j0 = np.compress(cond, idx0)
+    j1 = np.compress(cond, idx1)
+    if not distance:
+        return zip(j0,j1)
+    else:
+        Ls = np.compress(cond, L)
+        #return np.vstack((j0,j1,Ls)).T #all in float
+        return zip(j0,j1,Ls)            #list of tuples
+                
 
 def pairs_crude(xyz,rc,cell,distance=True):
     logger = logging.getLogger()
@@ -127,7 +150,7 @@ def pairs_crude(xyz,rc,cell,distance=True):
 
 
 #assume xyz and box are numpy.array
-def pairs_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True):
+def pairs_fine_hetero_slow(xyz,xyz2,rc,cell,grid,distance=True):
     for i,j in pairs2(xyz,xyz2,*grid):
         moli = xyz[i]
         molj = xyz2[j]
@@ -143,6 +166,30 @@ def pairs_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True):
                 yield i,j
 
 
+
+
+def pairs_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True):
+    logger= logging.getLogger()
+    p = pairs2(xyz, xyz2, *grid)
+    idx0 = p[:,0]
+    idx1 = p[:,1]
+    p0 = xyz[idx0]
+    p1 = xyz2[idx1]
+    d  = p0 - p1
+    d -= np.floor(d+0.5)
+    a  = np.dot(d,cell)
+    L  = np.linalg.norm(a, axis=1)
+    cond = L<rc
+    # pickup elements satisfying the condition.
+    j0 = np.compress(cond, idx0)
+    j1 = np.compress(cond, idx1)
+    if not distance:
+        return zip(j0,j1)
+    else:
+        Ls = np.compress(cond, L)
+        #return np.vstack((j0,j1,Ls)).T #all in float
+        return zip(j0,j1,Ls)            #list of tuples
+                
 #
 def determine_grid(cell, radius):
     logger = logging.getLogger()
@@ -176,7 +223,7 @@ def determine_grid(cell, radius):
 
 
 
-def test():
+def main():
     xyz = []
     for x in range(2):
         for y in range(2):
@@ -187,6 +234,8 @@ def test():
         for y in range(2):
             for z in range(2):
                 xyz2.append(np.array((x/100.+2,y/100.+1,z/100.+1)) / 4.)
+    xyz = np.array(xyz)
+    xyz2 = np.array(xyz2)
     box = np.diag((4,4,4))
     rc = 1.000000001
     grid = determine_grid(box,rc)
@@ -194,4 +243,4 @@ def test():
         print(i,j,l)
 
 if __name__ == "__main__":
-    test()
+    main()

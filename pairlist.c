@@ -43,8 +43,8 @@ returns:
   //assert ( GY > 2 );
   //assert ( GZ > 2 );
   int npair = 0;
-  int neighborcells = 26;
-  if ( single ) neighborcells = 13;
+  int neighborcells = 27;
+  if ( single ) neighborcells = 14;
   (*pairs) = (int*) malloc(sizeof(int)*neighborcells*nTotalGrids*2);
   //make neighboring grid list
   for(int ix=0;ix<GX;ix++){
@@ -62,9 +62,11 @@ returns:
             for(int kz=kz0;kz<=iz+1;kz++){
               int jz = (kz+GZ) % GZ;
               int b = ADDRESS(jx,jy,jz);
-              if ( (a != b) && ( ( ! single ) || ( a<b ) ) ){
+              if ( ( ! single ) || ( a<b ) ){
                 (*pairs)[npair*2+0] = a;
                 (*pairs)[npair*2+1] = b;
+		//if(a==b)
+		//  fprintf(stderr,"%d SAME\n", a);
                 npair ++;
               }
             }
@@ -126,7 +128,9 @@ returns:
   for(int i=0; i<npos; i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      grid[d] = floor(rpos[i*3+d] * ngrid[d]);
+      PL_FLOAT x = rpos[i*3+d];
+      x -= floor(x);
+      grid[d] = floor(x * ngrid[d]);
     }
     int a = ADDRESS(grid[0],grid[1],grid[2]);
     residents[pointer[a]] = i;
@@ -135,11 +139,11 @@ returns:
   if(test){
     //just print
     for(int g=0;g<nTotalGrids;g++){
-      printf("Grid %d\n", g);
-      printf("Number of residents: %d\n", nResidents[g]);
-      printf("First resident: %d\n", residents[heads[g]]);
-      printf("Last resident: %d\n", residents[heads[g] + nResidents[g] - 1]);
-      printf("Terminator (must be -1): %d\n", residents[heads[g] + nResidents[g]]);
+      fprintf(stderr, "Grid %d\n", g);
+      fprintf(stderr, "Number of residents: %d\n", nResidents[g]);
+      fprintf(stderr, "First resident: %d\n", residents[heads[g]]);
+      fprintf(stderr, "Last resident: %d\n", residents[heads[g] + nResidents[g] - 1]);
+      fprintf(stderr, "Terminator (must be -1): %d\n", residents[heads[g] + nResidents[g]]);
     }
   }
   //make the neighboring grid pair list
@@ -157,7 +161,7 @@ returns:
   }
   //it is not a rough estimate.
   //printf("Estim: %d\n", estim);
-  *pairs = (int*) malloc(sizeof(int) * (estim * 2+1000));
+  *pairs = (int*) malloc(sizeof(int) * estim * 2);
   int nPairs=0;
   for(int i=0;i<nGridPairs;i++){
     int g0 = gridPairs[i*2+0];
@@ -208,12 +212,14 @@ returns:
     pairs: newly allocated list of pairs
 */
 {
+  int test = 0;
   //determine the grid size
   const int GX = ngrid[0];
   const int GY = ngrid[1];
   const int GZ = ngrid[2];
   const int nTotalGrids = GX*GY*GZ;
-  printf("%dx%dx%d =%d nTotalGrids\n", GX,GY,GZ,nTotalGrids);
+  if(test)
+    fprintf(stderr,"%dx%dx%d =%d nTotalGrids\n", GX,GY,GZ,nTotalGrids);
   //count the number of residents in each grid cells.
   int nResidents0[nTotalGrids];
   int nResidents1[nTotalGrids];
@@ -223,15 +229,23 @@ returns:
   for(int i=0;i<npos0;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      grid[d] = floor(rpos0[i*3+d] * ngrid[d]);
+      PL_FLOAT x = rpos0[i*3+d];
+      x -= floor(x);
+      grid[d] = floor(x * ngrid[d]);
     }
+    if(test)
+      fprintf(stderr,"%d %d %d\n", grid[0], grid[1], grid[2]);
     nResidents0[ADDRESS(grid[0],grid[1],grid[2])] ++;
   }
   for(int i=0;i<npos1;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      grid[d] = floor(rpos1[i*3+d] * ngrid[d]);
+      PL_FLOAT x = rpos1[i*3+d];
+      x -= floor(x); //certify to be in range 0..1
+      grid[d] = floor(x * ngrid[d]);
     }
+    if(test)
+      fprintf(stderr,"%d %d %d\n", grid[0], grid[1], grid[2]);
     nResidents1[ADDRESS(grid[0],grid[1],grid[2])] ++;
   }
 
@@ -254,7 +268,9 @@ returns:
   for(int i=0;i<npos0;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      grid[d] = floor(rpos0[i*3+d] * ngrid[d]);
+      PL_FLOAT x = rpos0[i*3+d];
+      x -= floor(x); //certify to be in range 0..1
+      grid[d] = floor(x * ngrid[d]);
     }
     int a = ADDRESS(grid[0],grid[1],grid[2]);
     residents0[pointer[a]] = i;
@@ -265,6 +281,9 @@ returns:
   head = 0;
   for(int g=0;g<nTotalGrids;g++){
     heads1[g] = head;
+    //if(test)
+    //  if(g==104)
+    //fprintf(stderr,"%d %d\n", head, nResidents1[g]);
     pointer[g] = head;
     head += nResidents1[g]+1;
     residents1[head-1] = -1;
@@ -272,12 +291,26 @@ returns:
   for(int i=0;i<npos1;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      grid[d] = floor(rpos1[i*3+d] * ngrid[d]);
+      PL_FLOAT x = rpos1[i*3+d];
+      x -= floor(x); //certify to be in range 0..1
+      grid[d] = floor(x * ngrid[d]);
     }
     int a = ADDRESS(grid[0],grid[1],grid[2]);
     residents1[pointer[a]] = i;
     pointer[a] ++;
   }
+  /*
+  if(test){
+    //just print
+    for(int g=0;g<nTotalGrids;g++){
+      fprintf(stderr, "Grid %d\n", g);
+      fprintf(stderr, "Number of residents 0: %d\n", nResidents0[g]);
+      fprintf(stderr, "First resident 0: %d\n", residents0[heads0[g]]);
+      fprintf(stderr, "Last resident 0: %d\n", residents0[heads0[g] + nResidents0[g] - 1]);
+      fprintf(stderr, "Terminator (must be -1): %d\n", residents0[heads0[g] + nResidents0[g]]);
+    }
+  }
+  */
   //make the neighboring grid pair list
   int* gridPairs;
   int nGridPairs = gridpairlist(ngrid, False, &gridPairs);
@@ -291,37 +324,36 @@ returns:
   for(int g=0;g<nTotalGrids;g++){
     estim += nResidents0[g]*nResidents1[g];
   }
+  //if(test)
+  //  fprintf(stderr,"Estim: %d\n", estim);
 
   *pairs = (int*) malloc(sizeof(int) * estim*2);
-  //printf("Estim: %d\n", estim);
+  //fprintf(stderr,"%d %d\n", 104, heads1[104]);
+  //fprintf(stderr,"%d\n", nResidents1[104]);
+  //fprintf(stderr,"%d\n", residents1[heads1[104]+1]);
+  //exit(1);
   int nPairs=0;
   for(int i=0;i<nGridPairs;i++){
     int g0 = gridPairs[i*2+0];
     int g1 = gridPairs[i*2+1];
+    //if(g0==g1)
+    //  printf(stderr,"SAME\n");
     for(int j=0; j<nResidents0[g0]; j++){
       int r0 = residents0[heads0[g0] + j];
       for(int k=0; k<nResidents1[g1]; k++){
         int r1 = residents1[heads1[g1] + k];
 	(*pairs)[nPairs*2+0] = r0;
 	(*pairs)[nPairs*2+1] = r1;
-	nPairs ++;
-      }
-    }
-  }
-  for(int g=0;g<nTotalGrids;g++){
-    for(int j=0; j<nResidents0[g]; j++){
-      int r0 = residents0[heads0[g] + j];
-      for(int k=0; k<nResidents1[g]; k++){
-        int r1 = residents1[heads1[g] + k];
-	(*pairs)[nPairs*2+0] = r0;
-	(*pairs)[nPairs*2+1] = r1;
+	//if(test)
+	//  fprintf(stderr,"%d %d %d %d %d\n", r0,r1,heads0[g0],heads1[g1],g1);
 	nPairs ++;
       }
     }
   }
   //deallocate allocated memories
   free(gridPairs);
-  //printf("Strict: %d\n", nPairs);
+  //if(test)
+  //    fprintf(stderr,"Strict: %d\n", nPairs);
   return nPairs;
 }
 
