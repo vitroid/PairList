@@ -41,6 +41,7 @@ CRN1x222.gro:
 	genice CRN1 -r 2 2 2 > $@
 test3: CRN1x222.gro
 #	time python test1_rdf.py < $< > test1.rdf #95 sec
+	time python test20_rdf.py < $< > test20.rdf #3.6 sec
 	time python test2_rdf.py < $< > test2.rdf #1.2 sec
 	time python test3_rdf.py < $< > test3.rdf #0.8 sec
 

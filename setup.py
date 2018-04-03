@@ -7,7 +7,7 @@ from numpy.distutils.misc_util import get_numpy_include_dirs
 setup(ext_modules=[Extension("cpairlist", ["cpairlist.c", "pairlist.c"])],
       include_dirs=get_numpy_include_dirs(),
       name='PairList',
-      version='0.1.8',
+      version='0.1.9',
       zip_safe=False,
       py_modules=['pairlist'],
       description='Generate neighbor list for the particles in a periodic boundary cell.',

@@ -36,6 +36,7 @@ def pairs_py(xyz,GX,GY,GZ):
 
     #key-value pairs in the dictionary
     donecellpair = set()
+    pairs = []
     for address in residents:
         members = residents[address]
         #neighbor cells
@@ -46,14 +47,15 @@ def pairs_py(xyz,GX,GY,GZ):
                 if frozenset((address,a2)) not in donecellpair:
                     donecellpair.add(frozenset((address,a2)))
                     for a,b in it.combinations(members,2):
-                        yield a,b
+                        pairs.append((a,b))
             else:
                 if a2 in residents:
                     if frozenset((address,a2)) not in donecellpair:
                         donecellpair.add(frozenset((address,a2)))
                         for a in members:
                             for b in residents[a2]:
-                                yield a,b
+                                pairs.append((a,b))
+    return np.array(pairs)
 
 def pairs2_py(xyz,xyz2,GX,GY,GZ):
     grid = np.array([GX,GY,GZ])
@@ -68,6 +70,7 @@ def _pairs_hetero(xyz,xyz2,grid):
 
     #key-value pairs in the dictionary
     donecellpair = set()
+    pairs = []
     for address in residents:
         members = residents[address]
         ix,iy,iz = address
@@ -80,7 +83,8 @@ def _pairs_hetero(xyz,xyz2,grid):
                     donecellpair.add((address,a2))
                     for a in members:
                         for b in residents2[a2]:
-                            yield a,b
+                            pairs.append((a,b))
+    return np.array(pairs)
 
 
                                 
@@ -102,10 +106,10 @@ def pairs_fine_slow(xyz,rc,cell,grid,distance=True):
 
 
 # fully numpy style
-def pairs_fine(xyz,rc,cell,grid,distance=True, raw=False):
+def pairs_fine(xyz,rc,cell,grid,distance=True, raw=False, pairs_engine=pairs):
     logger= logging.getLogger()
     #p = np.array(list(pairs_py(xyz, *grid)))
-    p = pairs(xyz, *grid)
+    p = pairs_engine(xyz, *grid)
     idx0 = p[:,0]
     #for i in range(idx0.shape[0]):
     #    if idx0[i] > 1000:
@@ -181,9 +185,9 @@ def pairs_fine_hetero_slow(xyz,xyz2,rc,cell,grid,distance=True):
 
 
 
-def pairs_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True, raw=False):
+def pairs_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True, raw=False, pairs_engine=pairs2):
     logger= logging.getLogger()
-    p = pairs2(xyz, xyz2, *grid)
+    p = pairs_engine(xyz, xyz2, *grid)
     idx0 = p[:,0]
     idx1 = p[:,1]
     p0 = xyz[idx0]
