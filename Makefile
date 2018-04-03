@@ -31,8 +31,21 @@ build.:
 	-rm -rf build
 	python setup.py build_ext --inplace
 
+CRN1.gro:
+	genice CRN1 -r 1 1 1 > $@
+test2: CRN1.gro
+	time python test1_rdf.py < $< > test1.rdf #1.5 sec
+	time python test2_rdf.py < $< > test2.rdf #.26 sec
+	time python test3_rdf.py < $< > test3.rdf #.22 sec
+CRN1x222.gro:
+	genice CRN1 -r 2 2 2 > $@
+test3: CRN1x222.gro
+#	time python test1_rdf.py < $< > test1.rdf #95 sec
+	time python test2_rdf.py < $< > test2.rdf #1.2 sec
+	time python test3_rdf.py < $< > test3.rdf #0.8 sec
+
 clean:
-	-rm $(ALL) *.so *~ */*~ *.o
+	-rm $(ALL) *.so *~ */*~ *.o *.gro *.rdf
 	-rm -rf build dist
 	-rm -rf PairList.egg-info
 

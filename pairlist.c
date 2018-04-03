@@ -107,7 +107,9 @@ returns:
   for(int i=0;i<npos;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      grid[d] = floor(rpos[i*3+d] * ngrid[d]);
+      PL_FLOAT x = rpos[i*3+d];
+      x -= floor(x);
+      grid[d] = floor(x * ngrid[d]);
     }
     nResidents[ADDRESS(grid[0],grid[1],grid[2])] ++;
   }
@@ -138,12 +140,16 @@ returns:
   }
   if(test){
     //just print
-    for(int g=0;g<nTotalGrids;g++){
+    //for(int g=0;g<nTotalGrids;g++){
+    for(int g=12;g<13;g++){
       fprintf(stderr, "Grid %d\n", g);
       fprintf(stderr, "Number of residents: %d\n", nResidents[g]);
       fprintf(stderr, "First resident: %d\n", residents[heads[g]]);
       fprintf(stderr, "Last resident: %d\n", residents[heads[g] + nResidents[g] - 1]);
-      fprintf(stderr, "Terminator (must be -1): %d\n", residents[heads[g] + nResidents[g]]);
+      for(int i=0;i<nResidents[g];i++){
+	fprintf(stderr, "%d ", residents[heads[g] + i]);
+      }
+      fprintf(stderr, "\nTerminator (must be -1): %d\n", residents[heads[g] + nResidents[g]]);
     }
   }
   //make the neighboring grid pair list
@@ -160,7 +166,8 @@ returns:
     estim += nResidents[g]*(nResidents[g]-1) / 2;
   }
   //it is not a rough estimate.
-  //printf("Estim: %d\n", estim);
+  if(test)
+    fprintf(stderr,"Estim: %d\n", estim);
   *pairs = (int*) malloc(sizeof(int) * estim * 2);
   int nPairs=0;
   for(int i=0;i<nGridPairs;i++){
@@ -172,10 +179,21 @@ returns:
       //printf("g1 %d\n", g1);
       for(int k=0; k<nResidents[g1]; k++){
         int r1 = residents[heads[g1] + k];
+	if(test)
+	  if(r0>1000){
+	    fprintf(stderr,"%d %d %d %d %d %d %d\n", i,j,k,g0,g1,r0,r1);
+	  }
 	(*pairs)[nPairs*2+0] = r0;
 	(*pairs)[nPairs*2+1] = r1;
 	nPairs ++;
 	//printf("%d\n", nPairs);
+      }
+    }
+  }
+  if(test){
+    for(int i=0;i<nPairs;i++){
+      if ((*pairs)[i*2+0]>1000){
+	//fprintf(stderr, "%d, %d %d\n", i, (*pairs)[i*2+0], (*pairs)[i*2+1]);
       }
     }
   }
@@ -191,7 +209,8 @@ returns:
     }
   }
   //deallocate allocated memories
-  //printf("Strict: %d\n", nPairs);
+  if(test)
+    fprintf(stderr,"Strict: %d\n", nPairs);
   free(gridPairs);
   return nPairs;
 }

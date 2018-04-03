@@ -102,10 +102,16 @@ def pairs_fine_slow(xyz,rc,cell,grid,distance=True):
 
 
 # fully numpy style
-def pairs_fine(xyz,rc,cell,grid,distance=True):
+def pairs_fine(xyz,rc,cell,grid,distance=True, raw=False):
     logger= logging.getLogger()
+    #p = np.array(list(pairs_py(xyz, *grid)))
     p = pairs(xyz, *grid)
     idx0 = p[:,0]
+    #for i in range(idx0.shape[0]):
+    #    if idx0[i] > 1000:
+    #        print(i,idx0[i])
+    print(p.shape)
+    print(grid)
     idx1 = p[:,1]
     p0 = xyz[idx0]
     p1 = xyz[idx1]
@@ -117,17 +123,24 @@ def pairs_fine(xyz,rc,cell,grid,distance=True):
     # pickup elements satisfying the condition.
     j0 = np.compress(cond, idx0)
     j1 = np.compress(cond, idx1)
-    if not distance:
-        return zip(j0,j1)
+    if raw:
+        if not distance:
+            return j0, j1
+        else:
+            Ls = np.compress(cond, L)
+            return j0,j1,Ls         #no zipping
     else:
-        Ls = np.compress(cond, L)
-        #return np.vstack((j0,j1,Ls)).T #all in float
-        return zip(j0,j1,Ls)            #list of tuples
+        if not distance:
+            return np.column_stack((j0, j1))
+        else:
+            Ls = np.compress(cond, L)
+            # return np.column_stack(j0, j1) all the values becomes float...
+            return zip(j0,j1,Ls)    #list of tuples
                 
 
 def pairs_crude(xyz,rc,cell,distance=True):
     logger = logging.getLogger()
-    logger.debug(xyz)
+    # logger.debug(xyz)
     logger.debug(rc)
     logger.debug(cell)
     logger.debug(distance)
@@ -140,7 +153,7 @@ def pairs_crude(xyz,rc,cell,distance=True):
         rr = np.dot(r,r)
             
         if rr < rc**2:
-            logger.debug((d,r,rr,rc**2))
+            # logger.debug((d,r,rr,rc**2))
             if distance:
                 yield i,j,math.sqrt(rr)
             else:
@@ -168,7 +181,7 @@ def pairs_fine_hetero_slow(xyz,xyz2,rc,cell,grid,distance=True):
 
 
 
-def pairs_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True):
+def pairs_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True, raw=False):
     logger= logging.getLogger()
     p = pairs2(xyz, xyz2, *grid)
     idx0 = p[:,0]
@@ -183,12 +196,19 @@ def pairs_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True):
     # pickup elements satisfying the condition.
     j0 = np.compress(cond, idx0)
     j1 = np.compress(cond, idx1)
-    if not distance:
-        return zip(j0,j1)
+    if raw:
+        if not distance:
+            return j0, j1
+        else:
+            Ls = np.compress(cond, L)
+            return j0,j1,Ls         #no zipping
     else:
-        Ls = np.compress(cond, L)
-        #return np.vstack((j0,j1,Ls)).T #all in float
-        return zip(j0,j1,Ls)            #list of tuples
+        if not distance:
+            return np.column_stack((j0, j1))
+        else:
+            Ls = np.compress(cond, L)
+            # return np.column_stack(j0, j1) all the values becomes float...
+            return zip(j0,j1,Ls)    #list of tuples
                 
 #
 def determine_grid(cell, radius):
