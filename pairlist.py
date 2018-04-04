@@ -1,21 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-####Note: xyz are in coord relative to the cell.
-
+# even: stable; odd: develop
+# __version__ = "0.1."
 
 import math
-import itertools
+import itertools as it
 import numpy as np
+import logging
+from cpairlist import pairs, pairs2
+
+def Address(pos,grid):
+    #residents in each grid cell
+    mol = pos % 1 % 1  # avoid cancellation
+    return tuple((mol * grid).astype(int))
 
 
 def ArrangeAddress(xyz,grid):
     #residents in each grid cell
     residents = dict()
     for i in range(len(xyz)):
-        mol = xyz[i]
-        mol -= np.floor( mol )
-        address = tuple((mol * grid).astype(int))
+        address = Address(xyz[i], grid)
         if address not in residents:
             residents[address] = set()
         residents[address].add(i)
@@ -23,87 +27,148 @@ def ArrangeAddress(xyz,grid):
 
 
 
-def _pairlist(xyz,grid):
-    #print "START Arrange"
+def pairs_py(xyz,GX,GY,GZ):
+    grid = np.array([GX,GY,GZ])
+    logger = logging.getLogger()
+    logger.debug("START Arrange")
     residents = ArrangeAddress(xyz,grid)
-    #print "END Arrange"
+    logger.debug("END Arrange")
 
-    pair = set()
     #key-value pairs in the dictionary
     donecellpair = set()
+    pairs = []
     for address in residents:
         members = residents[address]
-        ix,iy,iz = address
         #neighbor cells
         npa = np.array(address)
         k = np.array([(npa + j + grid)%grid for j in range(-1,2)])
-        for a2 in itertools.product(k[:,0],k[:,1],k[:,2]):
+        for a2 in it.product(k[:,0],k[:,1],k[:,2]):
             if address == a2:
-                #print("ISOCELL",address,npa,a2)
-                for a,b in itertools.combinations(members,2):
-                    pair.add((a,b))
+                if frozenset((address,a2)) not in donecellpair:
+                    donecellpair.add(frozenset((address,a2)))
+                    for a,b in it.combinations(members,2):
+                        pairs.append((a,b))
             else:
                 if a2 in residents:
-                    if not (frozenset((address,a2)) in donecellpair):
+                    if frozenset((address,a2)) not in donecellpair:
                         donecellpair.add(frozenset((address,a2)))
-                        #print("HETEROCELL",address,a2,donecellpair)
                         for a in members:
                             for b in residents[a2]:
-                                pair.add((a,b))
-    #print "PAIRLIST finished"
-    return pair
+                                pairs.append((a,b))
+    return np.array(pairs)
 
+def pairs2_py(xyz,xyz2,GX,GY,GZ):
+    grid = np.array([GX,GY,GZ])
+    return _pairs_hetero(xyz,xyz2,grid)
 
-def _pairlist_hetero(xyz,xyz2,grid):
-    #print "START Arrange"
+def _pairs_hetero(xyz,xyz2,grid):
+    logger = logging.getLogger()
+    logger.debug("START Arrange")
     residents  = ArrangeAddress(xyz,grid)
     residents2 = ArrangeAddress(xyz2,grid)
-    #print "END Arrange"
+    logger.debug("END Arrange")
 
-    pair = set()
     #key-value pairs in the dictionary
     donecellpair = set()
+    pairs = []
     for address in residents:
         members = residents[address]
         ix,iy,iz = address
         #neighbor cells
         npa = np.array(address)
         k = np.array([(npa + j + grid)%grid for j in range(-1,2)])
-        for a2 in itertools.product(k[:,0],k[:,1],k[:,2]):
+        for a2 in it.product(k[:,0],k[:,1],k[:,2]):
             if a2 in residents2:
                 if not ((address,a2) in donecellpair):
-                        donecellpair.add((address,a2))
-                        #print("HETEROCELL",address,a2,donecellpair)
-                        for a in members:
-                            for b in residents2[a2]:
-                                pair.add((a,b))
-    #print "PAIRLIST finished"
-    return pair
+                    donecellpair.add((address,a2))
+                    for a in members:
+                        for b in residents2[a2]:
+                            pairs.append((a,b))
+    return np.array(pairs)
 
 
+                                
 #assume xyz and box are numpy.array
-def _pairlist_fine(xyz,rc,cell,grid,distance=True):
-    newpairs = []
-    for i,j in _pairlist(xyz,grid):
+def pairs_fine_slow(xyz,rc,cell,grid,distance=True):
+    logger= logging.getLogger()
+    for i,j in pairs(xyz,*grid):
         moli = xyz[i]
         molj = xyz[j]
         d = moli-molj
         d -= np.floor( d + 0.5 )
         d = np.dot(d,cell)
         rr = np.dot(d,d)
-            
         if rr < rc**2:
             if distance:
-                newpairs.append((i,j,math.sqrt(rr)))
+                yield i,j,math.sqrt(rr)
             else:
-                newpairs.append((i,j))
-    return np.array(newpairs)
+                yield i,j
+
+
+# fully numpy style
+def pairs_fine(xyz,rc,cell,grid,distance=True, raw=False, pairs_engine=pairs):
+    logger= logging.getLogger()
+    #p = np.array(list(pairs_py(xyz, *grid)))
+    p = pairs_engine(xyz, *grid)
+    idx0 = p[:,0]
+    #for i in range(idx0.shape[0]):
+    #    if idx0[i] > 1000:
+    #        print(i,idx0[i])
+    print(p.shape)
+    print(grid)
+    idx1 = p[:,1]
+    p0 = xyz[idx0]
+    p1 = xyz[idx1]
+    d  = p0 - p1
+    d -= np.floor(d+0.5)
+    a  = np.dot(d,cell)
+    L  = np.linalg.norm(a, axis=1)
+    cond = L<rc
+    # pickup elements satisfying the condition.
+    j0 = np.compress(cond, idx0)
+    j1 = np.compress(cond, idx1)
+    if raw:
+        if not distance:
+            return j0, j1
+        else:
+            Ls = np.compress(cond, L)
+            return j0,j1,Ls         #no zipping
+    else:
+        if not distance:
+            return np.column_stack((j0, j1))
+        else:
+            Ls = np.compress(cond, L)
+            # return np.column_stack(j0, j1) all the values becomes float...
+            return zip(j0,j1,Ls)    #list of tuples
+                
+
+def pairs_crude(xyz,rc,cell,distance=True):
+    logger = logging.getLogger()
+    # logger.debug(xyz)
+    logger.debug(rc)
+    logger.debug(cell)
+    logger.debug(distance)
+    for i,j in it.combinations(range(len(xyz)),2):
+        moli = xyz[i]
+        molj = xyz[j]
+        d = moli-molj
+        d -= np.floor( d + 0.5 )
+        r = np.dot(d,cell)
+        rr = np.dot(r,r)
+            
+        if rr < rc**2:
+            # logger.debug((d,r,rr,rc**2))
+            if distance:
+                yield i,j,math.sqrt(rr)
+            else:
+                yield i,j
+
+
 
 
 #assume xyz and box are numpy.array
-def _pairlist_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True):
-    newpairs = []
-    for i,j in _pairlist_hetero(xyz,xyz2,grid):
+def pairs_fine_hetero_slow(xyz,xyz2,rc,cell,grid,distance=True):
+    for i,j in pairs2(xyz,xyz2,*grid):
         moli = xyz[i]
         molj = xyz2[j]
         d = moli-molj
@@ -113,81 +178,93 @@ def _pairlist_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True):
             
         if rr < rc**2:
             if distance:
-                newpairs.append((i,j,math.sqrt(rr)))
+                yield i,j,math.sqrt(rr)
             else:
-                newpairs.append((i,j))
-    return np.array(newpairs)
+                yield i,j
 
 
+
+
+def pairs_fine_hetero(xyz,xyz2,rc,cell,grid,distance=True, raw=False, pairs_engine=pairs2):
+    logger= logging.getLogger()
+    p = pairs_engine(xyz, xyz2, *grid)
+    idx0 = p[:,0]
+    idx1 = p[:,1]
+    p0 = xyz[idx0]
+    p1 = xyz2[idx1]
+    d  = p0 - p1
+    d -= np.floor(d+0.5)
+    a  = np.dot(d,cell)
+    L  = np.linalg.norm(a, axis=1)
+    cond = L<rc
+    # pickup elements satisfying the condition.
+    j0 = np.compress(cond, idx0)
+    j1 = np.compress(cond, idx1)
+    if raw:
+        if not distance:
+            return j0, j1
+        else:
+            Ls = np.compress(cond, L)
+            return j0,j1,Ls         #no zipping
+    else:
+        if not distance:
+            return np.column_stack((j0, j1))
+        else:
+            Ls = np.compress(cond, L)
+            # return np.column_stack(j0, j1) all the values becomes float...
+            return zip(j0,j1,Ls)    #list of tuples
+                
 #
 def determine_grid(cell, radius):
-    ct = cell.transpose()
+    logger = logging.getLogger()
+    ct = cell  #.transpose()
+    #Cell vectors
     a = ct[0]
     b = ct[1]
     c = ct[2]
+    logger.debug("cell a {0}".format(a))
+    logger.debug("cell b {0}".format(b))
+    logger.debug("cell c {0}".format(c))
+    #Edge lengths
     al = np.linalg.norm(a)   #vector length
     bl = np.linalg.norm(b)
     cl = np.linalg.norm(c)
+    #Unit vectors of the axes.
     ae = a / al              #unit vectors
     be = b / bl
     ce = c / cl
-    ad = np.dot(ae,np.cross(be,ce)) #distance to the bc plane
-    bd = np.dot(be,np.cross(ce,ae))
-    cd = np.dot(ce,np.cross(ae,be))
-    ax = radius / ad        # required length of a vector to contain a sphere of radius 
-    bx = radius / bd
-    cx = radius / cd
-    gf = np.array([al/ax, bl/bx, cl/cx])  # required number of grid cells
+    #Distance between the parallel faces
+    an = np.dot(a,np.cross(be,ce)) #distance to the bc plane
+    bn = np.dot(b,np.cross(ce,ae))
+    cn = np.dot(c,np.cross(ae,be))
+    gf = np.array([an/radius, bn/radius, cn/radius])  # required number of grid cells
+    #Check the lengths of four diagonals.
+    logger.debug("Grid divisions: {0}".format(np.floor(gf)))
     #print(cell,radius,gf)
     #import sys
     #sys.exit(1)
     return np.floor(gf).astype(int)
 
 
-def pairlist(xyz,rc,cell,xyz2=None,distance=True):
-    grid = determine_grid(cell, rc)
-    if xyz2 is None:
-        return _pairlist_fine(xyz,rc,cell,grid,distance)
-    else:
-        return _pairlist_fine_hetero(xyz,xyz2,rc,cell,grid,distance)
 
-def test():
-    file = open("pairlist-test3.gro")
-    line = file.readline()
-    natom = int(file.readline())
-    Os = []
-    Hs = []
-    for i in range(natom):
-        line = file.readline()
-        cols = line.split()
-        xyz = np.array([float(x) for x in cols[3:6]])
-        if cols[1][0:2] == "OW":
-            Os.append(xyz)
-        else:
-            Hs.append(xyz)
-    Hs = np.array(Hs)
-    Os = np.array(Os)
-    #the last line is cell shape
-    line = file.readline()
-    cols = line.split()
-    dimen = np.array([float(x) for x in cols])
-    celli = 1.0 / dimen
-    cell = np.diag(dimen)
-    #Atoms must be in relative coordinate
-    Hs[:] *= celli
-    Os[:] *= celli
-    assert len(Hs) == 864
-    assert len(Os) == 432
-    #find O-O pairs in 0.3 nm
-    pairs = pairlist(Os, 0.3, cell)
-    assert len(pairs) == 864
-    #find OH covalent bonds
-    pairs = pairlist(Os, 0.12, cell, Hs)
-    assert len(pairs) == 864
-    #find hydrogen bonds
-    pairs = pairlist(Os, 0.245, cell, Hs)
-    pairs = pairs[pairs[:,2]> 0.12] #not covalent bond
-    assert len(pairs) == 864
+def main():
+    xyz = []
+    for x in range(2):
+        for y in range(2):
+            for z in range(2):
+                xyz.append(np.array((x/100.+1,y/100.+1,z/100.+1)) / 4.)
+    xyz2 = []
+    for x in range(2):
+        for y in range(2):
+            for z in range(2):
+                xyz2.append(np.array((x/100.+2,y/100.+1,z/100.+1)) / 4.)
+    xyz = np.array(xyz)
+    xyz2 = np.array(xyz2)
+    box = np.diag((4,4,4))
+    rc = 1.000000001
+    grid = determine_grid(box,rc)
+    for i,j,l in pairs_fine_hetero(xyz,xyz2,rc,box,grid):
+        print(i,j,l)
 
 if __name__ == "__main__":
-    test()
+    main()
