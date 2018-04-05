@@ -1,12 +1,11 @@
-OBJ=pairlist.o pairlist-test pairlist-test2 pairlist-test3
+OBJ=pairlist.o tests/pairlist-test tests/pairlist-test2 tests/pairlist-test3
 ALL=$(OBJ) pairlist-test2.data pairlist-test3.gro
 all: $(ALL)
-	./pairlist-test
-	./pairlist-test2
-	./pairlist-test3
-#	python3 example.py
+	tests/pairlist-test
+	tests/pairlist-test2
+	tests/pairlist-test3
 %.o: %.c
-	$(CC) -c -g $< -o $@
+	$(CC) -c -g $< -o $@ -I.
 #for tests
 %: %.c
 %: %.o pairlist.o
@@ -35,16 +34,16 @@ build.:
 CRN1.gro:
 	genice CRN1 -r 1 1 1 > $@
 test2: CRN1.gro
-	time python test1_rdf.py < $< > test1.rdf #1.5 sec
-	time python test2_rdf.py < $< > test2.rdf #.26 sec
-	time python test3_rdf.py < $< > test3.rdf #.22 sec
+	time python tests/test1_rdf.py < $< > test1.rdf #1.5 sec
+	time python tests/test2_rdf.py < $< > test2.rdf #.26 sec
+	time python tests/test3_rdf.py < $< > test3.rdf #.22 sec
 CRN1x222.gro:
 	genice CRN1 -r 2 2 2 > $@
 test3: CRN1x222.gro
 #	time python test1_rdf.py < $< > test1.rdf #95 sec
-	time python test20_rdf.py < $< > test20.rdf #3.6 sec
-	time python test2_rdf.py < $< > test2.rdf #1.2 sec
-	time python test3_rdf.py < $< > test3.rdf #0.8 sec
+	time python tests/test20_rdf.py < $< > test20.rdf #3.6 sec
+	time python tests/test2_rdf.py < $< > test2.rdf #1.2 sec
+	time python tests/test3_rdf.py < $< > test3.rdf #0.8 sec
 
 clean:
 	-rm $(ALL) *.so *~ */*~ *.o *.gro *.rdf
