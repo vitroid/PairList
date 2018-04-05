@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-# __version__ = "0.1."
+__version__ = "0.2"
 
 import math
 import itertools as it
@@ -114,8 +114,6 @@ def pairs_fine(xyz,rc,cell,grid,distance=True, raw=False, pairs_engine=pairs):
     #for i in range(idx0.shape[0]):
     #    if idx0[i] > 1000:
     #        print(i,idx0[i])
-    print(p.shape)
-    print(grid)
     idx1 = p[:,1]
     p0 = xyz[idx0]
     p1 = xyz[idx1]

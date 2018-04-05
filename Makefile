@@ -19,9 +19,10 @@ pairlist-test3.gro: Makefile
 	genice --format g --rep 10 10 10  1h > $@
 register:
 	./setup.py register -r pairlist
-pypi:
-	make README.rst
+check:
 	./setup.py check
+pypi: check
+	make README.rst
 	./setup.py sdist bdist_wheel upload
 install:
 	make README.rst
