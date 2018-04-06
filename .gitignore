@@ -18,3 +18,7 @@ pairlist-test3
 *.so
 
 @
+
+*.yap
+
+\.yapviewstack

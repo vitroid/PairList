@@ -15,6 +15,7 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'pairlist.py'),
     metadata = dict(re.findall(r"""__([a-z]+)__ = "([^"]+)""", version_file.read()))
 
 setup(ext_modules=[Extension("cpairlist", ["cpairlist.c", "pairlist.c"])],
+      headers=["pairlist.h"],
       include_dirs=get_numpy_include_dirs(),
       name='PairList',
       version=metadata['version'],
