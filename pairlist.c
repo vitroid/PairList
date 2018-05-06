@@ -250,6 +250,7 @@ returns:
     for(int d=0;d<3;d++){
       PL_FLOAT x = rpos0[i*3+d];
       x -= floor(x);
+      x -= floor(x);
       grid[d] = floor(x * ngrid[d]);
     }
     if(test)
@@ -260,6 +261,7 @@ returns:
     int grid[3];
     for(int d=0;d<3;d++){
       PL_FLOAT x = rpos1[i*3+d];
+      x -= floor(x); //certify to be in range 0..1
       x -= floor(x); //certify to be in range 0..1
       grid[d] = floor(x * ngrid[d]);
     }
@@ -289,6 +291,7 @@ returns:
     for(int d=0;d<3;d++){
       PL_FLOAT x = rpos0[i*3+d];
       x -= floor(x); //certify to be in range 0..1
+      x -= floor(x); //certify to be in range 0..1
       grid[d] = floor(x * ngrid[d]);
     }
     int a = ADDRESS(grid[0],grid[1],grid[2]);
@@ -312,13 +315,13 @@ returns:
     for(int d=0;d<3;d++){
       PL_FLOAT x = rpos1[i*3+d];
       x -= floor(x); //certify to be in range 0..1
+      x -= floor(x); //certify to be in range 0..1
       grid[d] = floor(x * ngrid[d]);
     }
     int a = ADDRESS(grid[0],grid[1],grid[2]);
     residents1[pointer[a]] = i;
     pointer[a] ++;
   }
-  /*
   if(test){
     //just print
     for(int g=0;g<nTotalGrids;g++){
@@ -329,7 +332,6 @@ returns:
       fprintf(stderr, "Terminator (must be -1): %d\n", residents0[heads0[g] + nResidents0[g]]);
     }
   }
-  */
   //make the neighboring grid pair list
   int* gridPairs;
   int nGridPairs = gridpairlist(ngrid, False, &gridPairs);
