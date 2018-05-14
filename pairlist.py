@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.2.2"
+__version__ = "0.2.4"
 
 import math
 import itertools as it
@@ -236,6 +236,12 @@ def determine_grid(cell, radius):
     bn = np.dot(b,np.cross(ce,ae))
     cn = np.dot(c,np.cross(ae,be))
     gf = np.array([an/radius, bn/radius, cn/radius])  # required number of grid cells
+    if gf[0] < 1.0:
+        gf[0] = 1.0
+    if gf[1] < 1.0:
+        gf[1] = 1.0
+    if gf[2] < 1.0:
+        gf[2] = 1.0
     #Check the lengths of four diagonals.
     logger.debug("Grid divisions: {0}".format(np.floor(gf)))
     #print(cell,radius,gf)

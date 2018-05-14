@@ -29,7 +29,7 @@ install:
 build.:
 	-rm *.so
 	-rm -rf build
-	python setup.py build_ext --inplace
+	python setup.py build_ext #--inplace
 
 CRN1.gro:
 	genice CRN1 -r 1 1 1 > $@

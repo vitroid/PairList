@@ -5,6 +5,8 @@
 #include <assert.h>
 #include "pairlist.h"
 
+// neighborlist.cを使って書きなおそうかとも思ったが、効率が若干悪くなる気がするのでやめる。
+
 #define ADDRESS(x,y,z) (((z)*GY + (y))*GX + (x))
 #define True 1
 #define False 0
