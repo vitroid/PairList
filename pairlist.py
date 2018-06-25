@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 
 import math
 import itertools as it
