@@ -23,3 +23,8 @@ pairlist-test3
 *.yap
 
 \.yapviewstack
+dist/*
+build/*
+PairList\.egg-info/
+
+dist/

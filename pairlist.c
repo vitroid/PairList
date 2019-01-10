@@ -103,6 +103,7 @@ returns:
   const int nTotalGrids = GX*GY*GZ;
   
   //count the number of residents in each grid cells.
+  //2018-11-12 THIS MAY CAUSE SEGFAULT WHEN HEAP IS NOT ENOUGH
   int nResidents[nTotalGrids];
   for(int i=0;i<nTotalGrids;i++)
     nResidents[i] = 0;
