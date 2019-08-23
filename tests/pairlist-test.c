@@ -8,8 +8,8 @@
   
 void
 Test(){
-  float cell[3] = {9.0, 11.0, 13.0};
-  float atoms[27*3];
+  double cell[3] = {9.0, 11.0, 13.0};
+  double atoms[27*3];
   int nAtoms = 0;
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
@@ -26,9 +26,9 @@ Test(){
   for(int i=0;i<nPairs;i++){
     int r0 = pairs[i*2+0];
     int r1 = pairs[i*2+1];
-    float sum2 = 0.0;
+    double sum2 = 0.0;
     for(int d=0;d<3;d++){
-      float delta = atoms[r0*3+d] - atoms[r1*3+d];
+      double delta = atoms[r0*3+d] - atoms[r1*3+d];
       delta -= floor( delta / cell[d] + 0.5 ) * cell[d];
       sum2 += delta*delta;
     }

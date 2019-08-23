@@ -1,5 +1,6 @@
 OBJ=pairlist.o tests/pairlist-test tests/pairlist-test2 tests/pairlist-test3
 ALL=$(OBJ) pairlist-test2.data pairlist-test3.gro
+PKGNAME=pairlist
 all: $(ALL)
 	tests/pairlist-test
 	tests/pairlist-test2
@@ -16,20 +17,27 @@ pairlist-test2.data:
 	genice --format q --rep 3 3 3 1h --water tip4p > $@
 pairlist-test3.gro: Makefile
 	genice --format g --rep 10 10 10  1h > $@
-register:
-	./setup.py register -r pairlist
+
+
+test-deploy: build
+	twine upload -r pypitest dist/*
+test-install:
+	pip install --index-url https://test.pypi.org/simple/ $(PKGNAME)
+
+
+install:
+	./setup.py install
+uninstall:
+	-pip uninstall -y pairlist
+build: README.md
+	./setup.py sdist bdist_wheel
+
+
+deploy: build
+	twine upload --repository pypi dist/*
 check:
 	./setup.py check
-pypi: check
-	make README.rst
-	./setup.py sdist bdist_wheel upload
-install:
-	make README.rst
-	./setup.py install
-build.:
-	-rm *.so
-	-rm -rf build
-	python setup.py build_ext #--inplace
+
 
 CRN1.gro:
 	genice CRN1 -r 1 1 1 > $@
