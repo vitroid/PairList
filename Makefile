@@ -1,7 +1,10 @@
-OBJ=pairlist.o tests/pairlist-test tests/pairlist-test2 tests/pairlist-test3
+OBJ=pairlist.o
+TESTS=tests/pairlist-test tests/pairlist-test2 tests/pairlist-test3
 ALL=$(OBJ) pairlist-test2.data pairlist-test3.gro
 PKGNAME=pairlist
-all: $(ALL)
+all: $(OBJ)
+	echo Done.
+test: $(ALL)
 	tests/pairlist-test
 	tests/pairlist-test2
 	tests/pairlist-test3

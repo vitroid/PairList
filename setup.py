@@ -36,11 +36,7 @@ setup(ext_modules=[Extension("cpairlist", ["cpairlist.c", "pairlist.c"],
       url='https://github.com/vitroid/PairList/',
       keywords=['pairlist',],
       license='MIT',
-#      packages=['pairlist',],
-#                'genice.molecules',
-#                'genice.lattices',
-#                'genice.formats',
-#                ],
+      # install_requires=['numpy','methodtools'],
       install_requires=['numpy',],
       entry_points = {
               'console_scripts': [

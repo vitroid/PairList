@@ -22,8 +22,7 @@ def main():
     intv = 0.003
     maxbin = 300
 
-    grid = pl.determine_grid(cellmat, intv*maxbin)
-    i,j,r = pl.pairs_fine(rpos, intv*maxbin, cellmat, grid, distance=True, raw=True)
+    i,j,r = pl.pairs_fine(rpos, intv*maxbin, cellmat, distance=True, raw=True)
     # 対距離を整数化する
     delta = np.floor(r/intv)
     # 同じ値が何度出現したかをカウントする=ヒストグラムを作る。

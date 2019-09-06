@@ -26,10 +26,9 @@ def main():
 
     histo = [0.0 for i in range(maxbin)]
 
-    # 距離intv*maxbin以内のすべての対を選ぶのに最適な、グリッド分割数を決める。
-    grid = pl.determine_grid(cellmat, intv*maxbin)
     # 対とその距離を計算し、ヒストグラムにする。
-    for i,j,r in pl.pairs_fine(rpos, intv*maxbin, cellmat, grid, distance=True):
+    for i,j,r in pl.pairs_fine(rpos, intv*maxbin, cellmat,
+                               distance=True):
         # accumulate
         ir = int(r/intv)
         if ir < maxbin:
