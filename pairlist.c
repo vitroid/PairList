@@ -221,6 +221,9 @@ returns:
     fprintf(stderr,"Strict: %d\n", nPairs);
   free(gridPairs);
   free(nResidents);
+  free(pointer);
+  free(residents);
+  free(heads);
   return nPairs;
 }
   
