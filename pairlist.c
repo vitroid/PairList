@@ -122,9 +122,12 @@ returns:
   //resident list is serialized to reduce the memory usage
   //head pointer to the list of residents in a grid cell is in headOfList.
   //atom ids are put in the residents[] and is terminated with -1.
-  int residents[npos + nTotalGrids];
-  int heads[nTotalGrids];
-  int pointer[nTotalGrids];
+  //int residents[npos + nTotalGrids];
+  //int heads[nTotalGrids];
+  //int pointer[nTotalGrids];
+  int* pointer   = (int*)calloc(nTotalGrids, sizeof(int));
+  int* residents = (int*)calloc(npos+nTotalGrids, sizeof(int));
+  int* heads     = (int*)calloc(nTotalGrids, sizeof(int));
   int head = 0;
   for(int g=0; g<nTotalGrids; g++){
     heads[g] = head;
