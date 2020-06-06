@@ -2,7 +2,7 @@ OBJ=pairlist.o
 TESTS=tests/pairlist-test tests/pairlist-test2 tests/pairlist-test3
 ALL=$(OBJ) pairlist-test2.data pairlist-test3.gro
 PKGNAME=pairlist
-all: $(OBJ)
+all: $(OBJ) README.md
 	echo Done.
 test: $(ALL)
 	tests/pairlist-test
@@ -10,16 +10,21 @@ test: $(ALL)
 	tests/pairlist-test3
 %.o: %.c
 	$(CC) -c -g $< -o $@ -I.
+
 #for tests
 %: %.c
 %: %.o pairlist.o
 	$(CC) -g $^ -o $@
-%.rst: %.md
-	md2rst $<
 pairlist-test2.data:
 	genice --format q --rep 3 3 3 1h --water tip4p > $@
 pairlist-test3.gro: Makefile
 	genice --format g --rep 10 10 10  1h > $@
+
+
+%: temp_% replacer.py pairlist.py
+	python replacer.py < $< > $@
+	-fgrep '%%' $@
+
 
 
 test-deploy: build

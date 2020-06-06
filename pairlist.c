@@ -104,9 +104,11 @@ returns:
   
   //count the number of residents in each grid cells.
   //2018-11-12 THIS MAY CAUSE SEGFAULT WHEN HEAP IS NOT ENOUGH
-  int nResidents[nTotalGrids];
-  for(int i=0;i<nTotalGrids;i++)
-    nResidents[i] = 0;
+  //2020-06-06 incredibly, it causes error in some compiler. 
+  //int nResidents[nTotalGrids];
+  //for(int i=0;i<nTotalGrids;i++)
+  //  nResidents[i] = 0;
+  int* nResidents = (int*)calloc(nTotalGrids, sizeof(int));
   for(int i=0;i<npos;i++){
     int grid[3];
     for(int d=0;d<3;d++){
@@ -120,9 +122,12 @@ returns:
   //resident list is serialized to reduce the memory usage
   //head pointer to the list of residents in a grid cell is in headOfList.
   //atom ids are put in the residents[] and is terminated with -1.
-  int residents[npos + nTotalGrids];
-  int heads[nTotalGrids];
-  int pointer[nTotalGrids];
+  //int residents[npos + nTotalGrids];
+  //int heads[nTotalGrids];
+  //int pointer[nTotalGrids];
+  int* pointer   = (int*)calloc(nTotalGrids, sizeof(int));
+  int* residents = (int*)calloc(npos+nTotalGrids, sizeof(int));
+  int* heads     = (int*)calloc(nTotalGrids, sizeof(int));
   int head = 0;
   for(int g=0; g<nTotalGrids; g++){
     heads[g] = head;
@@ -215,6 +220,7 @@ returns:
   if(test)
     fprintf(stderr,"Strict: %d\n", nPairs);
   free(gridPairs);
+  free(nResidents);
   return nPairs;
 }
   
@@ -243,11 +249,13 @@ returns:
   if(test)
     fprintf(stderr,"%dx%dx%d =%d nTotalGrids\n", GX,GY,GZ,nTotalGrids);
   //count the number of residents in each grid cells.
-  int nResidents0[nTotalGrids];
-  int nResidents1[nTotalGrids];
-  for(int i=0;i<nTotalGrids;i++){
-    nResidents0[i] = nResidents1[i] = 0;
-  }
+  //int nResidents0[nTotalGrids];
+  //int nResidents1[nTotalGrids];
+  //for(int i=0;i<nTotalGrids;i++){
+  //  nResidents0[i] = nResidents1[i] = 0;
+  //}
+  int* nResidents0 = (int*)calloc(nTotalGrids, sizeof(int));
+  int* nResidents1 = (int*)calloc(nTotalGrids, sizeof(int));
   for(int i=0;i<npos0;i++){
     int grid[3];
     for(int d=0;d<3;d++){
@@ -277,11 +285,14 @@ returns:
   //resident list is serialized to reduce the memory usage
   //head pointer to the list of residents in a grid cell is in heads.
   //atom ids are put in the residents[] and is terminated with -1.
-  int pointer[nTotalGrids];
+  //int pointer[nTotalGrids];
+  int* pointer = (int*)calloc(nTotalGrids, sizeof(int));
   int head;
 
-  int residents0[npos0 + nTotalGrids];
-  int heads0[nTotalGrids];
+  //int residents0[npos0 + nTotalGrids];
+  //int heads0[nTotalGrids];
+  int* residents0 = (int*)calloc(npos0 + nTotalGrids, sizeof(int));
+  int* heads0     = (int*)calloc(nTotalGrids, sizeof(int));
   head = 0;
   for(int g=0;g<nTotalGrids;g++){
     heads0[g] = head;
@@ -301,8 +312,10 @@ returns:
     residents0[pointer[a]] = i;
     pointer[a] ++;
   }
-  int residents1[npos1 + nTotalGrids];
-  int heads1[nTotalGrids];
+  //int residents1[npos1 + nTotalGrids];
+  //int heads1[nTotalGrids];
+  int* residents1 = (int*)calloc(npos1 + nTotalGrids, sizeof(int));
+  int* heads1     = (int*)calloc(nTotalGrids, sizeof(int));
   head = 0;
   for(int g=0;g<nTotalGrids;g++){
     heads1[g] = head;
@@ -378,6 +391,13 @@ returns:
   free(gridPairs);
   //if(test)
   //    fprintf(stderr,"Strict: %d\n", nPairs);
+  free(nResidents0);
+  free(nResidents1);
+  free(residents0);
+  free(residents1);
+  free(pointer);
+  free(heads0);
+  free(heads1);
   return nPairs;
 }
 

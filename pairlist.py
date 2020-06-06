@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.2.8"
+__version__ = "0.2.10"
 
 import math
 import itertools as it
@@ -108,6 +108,14 @@ def pairs_fine_slow(xyz,rc,cell,grid=None,distance=True):
                 yield i,j
 
 
+# wrapper
+def pairs_iter(pos, rc, cell, pos2=None, grid=None, distance=True, raw=False):
+    if pos2 is not None:
+        return pairs_fine_hetero(pos, pos2, rc, cell, grid=grid, distance=distance, raw=raw)
+    else:
+        return pairs_fine(pos, rc, cell, grid=grid, distance=distance, raw=raw)
+
+        
 # fully numpy style
 def pairs_fine(xyz,rc,cell,grid=None,distance=True, raw=False, pairs_engine=pairs):
     logger = getLogger()
