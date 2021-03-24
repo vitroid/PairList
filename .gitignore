@@ -28,3 +28,4 @@ build/*
 PairList\.egg-info/
 
 dist/
+.eggs/

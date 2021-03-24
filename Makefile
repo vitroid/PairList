@@ -65,4 +65,3 @@ clean:
 	-rm $(ALL) *.so *~ */*~ *.o *.gro *.rdf
 	-rm -rf build dist
 	-rm -rf PairList.egg-info
-

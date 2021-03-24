@@ -2,8 +2,6 @@
 
 # from distutils.core import setup, Extension
 from setuptools import setup, Extension
-import numpy
-from numpy.distutils.misc_util import get_numpy_include_dirs
 import os
 import codecs
 import re
@@ -15,10 +13,17 @@ with codecs.open(os.path.join(os.path.dirname(__file__), 'pairlist.py'),
                  encoding='utf8') as version_file:
     metadata = dict(re.findall(r"""__([a-z]+)__ = "([^"]+)""", version_file.read()))
 
+# bootstrap numpy
+from setuptools import dist
+dist.Distribution().fetch_build_eggs(['numpy'])
+import numpy
+from numpy.distutils.misc_util import get_numpy_include_dirs
+
 setup(ext_modules=[Extension("cpairlist", ["cpairlist.c", "pairlist.c"],
-                             extra_compile_args = ["-std=c99"],)],
+                             extra_compile_args = ["-std=c99",],
+                             include_dirs=get_numpy_include_dirs())],
       headers=["pairlist.h"],
-      include_dirs=get_numpy_include_dirs(),
+      # include_dirs=get_numpy_include_dirs(),
       name='PairList',
       version=metadata['version'],
       zip_safe=False,

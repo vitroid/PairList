@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.2.10.1"
+__version__ = "0.2.11"
 
 import math
 import itertools as it
@@ -88,7 +88,7 @@ def _pairs_hetero(xyz,xyz2,grid):
     return np.array(pairs)
 
 
-                                
+
 #assume xyz and box are numpy.array
 def pairs_fine_slow(xyz,rc,cell,grid=None,distance=True):
     logger = getLogger()
@@ -115,7 +115,7 @@ def pairs_iter(pos, rc, cell, pos2=None, grid=None, distance=True, raw=False):
     else:
         return pairs_fine(pos, rc, cell, grid=grid, distance=distance, raw=raw)
 
-        
+
 # fully numpy style
 def pairs_fine(xyz,rc,cell,grid=None,distance=True, raw=False, pairs_engine=pairs):
     logger = getLogger()
@@ -150,7 +150,7 @@ def pairs_fine(xyz,rc,cell,grid=None,distance=True, raw=False, pairs_engine=pair
             Ls = np.compress(cond, L)
             # return np.column_stack(j0, j1) all the values becomes float...
             return zip(j0,j1,Ls)    #list of tuples
-                
+
 
 def pairs_crude(xyz,rc,cell,distance=True):
     logger = getLogger()
@@ -165,7 +165,7 @@ def pairs_crude(xyz,rc,cell,distance=True):
         d -= np.floor( d + 0.5 )
         r = np.dot(d,cell)
         rr = np.dot(r,r)
-            
+
         if rr < rc**2:
             # logger.debug((d,r,rr,rc**2))
             if distance:
@@ -187,7 +187,7 @@ def pairs_fine_hetero_slow(xyz,xyz2,rc,cell,grid=None,distance=True):
         d -= np.floor( d + 0.5 )
         d = np.dot(d,cell)
         rr = np.dot(d,d)
-            
+
         if rr < rc**2:
             if distance:
                 yield i,j,math.sqrt(rr)
@@ -227,7 +227,7 @@ def pairs_fine_hetero(xyz,xyz2,rc,cell,grid=None,distance=True, raw=False, pairs
             Ls = np.compress(cond, L)
             # return np.column_stack(j0, j1) all the values becomes float...
             return zip(j0,j1,Ls)    #list of tuples
-                
+
 
 
 # @lru_cache(maxsize=None)
