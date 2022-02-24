@@ -1,42 +1,27 @@
 #!/usr/bin/env python
 import sys
-import os
 import distutils.core
 from logging import getLogger
+from jinja2 import Template
 
 setup = distutils.core.run_setup("setup.py")
 
 
-
-def line_replacer(line, d):
-    logger = getLogger()
-    s = ""
-    for tag in d:
-        loc = line.find(tag)
-        if loc >= 0:
-            logger.debug("From {0} by {1}.".format(tag, d[tag]))
-            replacement = d[tag].splitlines()
-            if len(replacement) == 1:
-                s = line.replace(tag, replacement[0])
-            else:
-                indent = line[:loc]
-                for newline in replacement:
-                    s += indent + newline + "\n"
-            return s
-    return line
-
-
+def prefix(L, pre):
+    return pre + ("\n"+pre).join(L) + "\n"
 
 
 d = {
-    "%%sample.py%%"   : "".join(open("sample.py").readlines()),
-    "%%sample2.py%%"  : "".join(open("sample2.py").readlines()),
-    "%%version%%" : setup.get_version(),
-    "%%package%%" : setup.get_name(),
-    "%%url%%"     : setup.get_url(),
-    "%%requires%%": "\n".join(setup.install_requires),
+    "sample_py": "".join(open("sample.py").readlines()),
+    "sample2_py": "".join(open("sample2.py").readlines()),
+    "version": setup.get_version(),
+    "package": setup.get_name(),
+    "url": setup.get_url(),
+    "requires": prefix(setup.install_requires, "* "),
 }
 
 
-for line in sys.stdin:
-    print(line_replacer(line, d), end="")
+# for line in sys.stdin:
+#     print(line_replacer(line, d), end="")
+t = Template(sys.stdin.read())
+print(t.render(**d))
