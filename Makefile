@@ -39,7 +39,7 @@ test3: CRN1x222.gro
 	time python tests/test2_rdf.py < $< > test2.rdf #1.2 sec
 	time python tests/test3_rdf.py < $< > test3.rdf #0.8 sec
 
-%: temp_% replacer.py pairlist.py
+%: temp_% replacer.py pairlist.py benchmark/benchmark.py
 	python3 replacer.py < $< > $@
 	-fgrep '}}' $@
 

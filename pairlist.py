@@ -117,7 +117,8 @@ def pairs_iter(
         fractional=True,
         pos2=None,
         distance=True,
-        raw=False):
+        raw=False,
+        engine=(pairs, pairs2)):
     """
     Iterator to find pairs in a cell with periodic boundary conditions.
 
@@ -154,7 +155,8 @@ def pairs_iter(
             cell,
             grid=grid,
             distance=distance,
-            raw=raw)
+            raw=raw,
+            engine = engine[0])
     else:
         return pairs_fine_hetero(
             rpos,
@@ -163,7 +165,8 @@ def pairs_iter(
             cell,
             grid=grid,
             distance=distance,
-            raw=raw)
+            raw=raw,
+            engine = engine[1])
 
 
 # fully numpy style
@@ -174,11 +177,11 @@ def pairs_fine(
         grid=None,
         distance=True,
         raw=False,
-        pairs_engine=pairs):
+        engine=pairs):
     logger = getLogger()
     if grid is None:
         grid = determine_grid(cell, rc)
-    p = pairs_engine(xyz, *grid)
+    p = engine(xyz, *grid)
     idx0 = p[:, 0]
     # for i in range(idx0.shape[0]):
     #    if idx0[i] > 1000:
@@ -258,11 +261,11 @@ def pairs_fine_hetero(
         grid=None,
         distance=True,
         raw=False,
-        pairs_engine=pairs2):
+        engine=pairs2):
     logger = getLogger()
     if grid is None:
         grid = determine_grid(cell, rc)
-    p = pairs_engine(xyz, xyz2, *grid)
+    p = engine(xyz, xyz2, *grid)
     idx0 = p[:, 0]
     idx1 = p[:, 1]
     p0 = xyz[idx0]

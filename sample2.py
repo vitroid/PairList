@@ -16,6 +16,6 @@ lattice, cell = SimpleCubic(N)
 # bipartile BCC lattice
 lattice2 = lattice + 1 / (N * 2)
 
-for i, j in pl.pairs_iter(lattice, rc=1.1 * 3**0.5 / 2,
+for i, j in pl.pairs_iter(lattice, macdist=1.1 * 3**0.5 / 2,
                           cell=cell, pos2=lattice2, distance=False):
     print(i, j)

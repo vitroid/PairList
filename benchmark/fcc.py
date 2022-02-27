@@ -14,8 +14,3 @@ def FaceCenteredCubic(N):
                         for z in range(N2)
                         if (x + y + z) % 2 == 0])
     return lattice, cell * N
-
-
-lattice, cell = FaceCenteredCubic(2)
-for i, j, d in pl.pairs_iter(lattice, maxdist=1.1, cell=cell):
-    print(i, j, d)
