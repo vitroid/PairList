@@ -161,6 +161,8 @@ print(pairlist_c(lattice, cell), "pairs")
 
 ```
 
+![benchmark](https://github.com/vitroid/PairList/raw/master/benchmark/benchmark.png)
+
 ## Algorithm
 
 A simple cell division algorithm is implemented.

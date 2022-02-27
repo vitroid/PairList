@@ -46,6 +46,8 @@ INFO pairlist_c: 16 ms
 {{benchmark_py}}
 ```
 
+![benchmark](https://github.com/vitroid/PairList/raw/master/benchmark/benchmark.png)
+
 ## Algorithm
 
 A simple cell division algorithm is implemented.
