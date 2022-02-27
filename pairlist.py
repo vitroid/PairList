@@ -137,7 +137,7 @@ def pairs_iter(
     i,j         indices of a pair
     i,j,distance indices and the distance between the pair (distance=True)
     """
-    grid = None # 
+    grid = None
     if fractional:
         rpos = pos
         rpos2 = pos2
@@ -156,7 +156,7 @@ def pairs_iter(
             grid=grid,
             distance=distance,
             raw=raw,
-            engine = engine[0])
+            engine=engine[0])
     else:
         return pairs_fine_hetero(
             rpos,
@@ -166,7 +166,7 @@ def pairs_iter(
             grid=grid,
             distance=distance,
             raw=raw,
-            engine = engine[1])
+            engine=engine[1])
 
 
 # fully numpy style

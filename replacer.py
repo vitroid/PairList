@@ -8,7 +8,7 @@ setup = distutils.core.run_setup("setup.py")
 
 
 def prefix(L, pre):
-    return pre + ("\n"+pre).join(L) + "\n"
+    return pre + ("\n" + pre).join(L) + "\n"
 
 
 d = {

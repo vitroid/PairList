@@ -17,6 +17,7 @@ def timeit(func):
             logger.info(f"{func.__name__}: {end_ if end_ > 0 else 0} ms")
     return _time_it
 
+
 def banner(func):
     @wraps(func)
     def _banner(*args, **kwargs):

@@ -4,12 +4,14 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def pairlist_c(lattice, cell, rc=1.1):
     "Neighboring pair list by pairlist in c."
     count = 0
     for i, j, d in pl.pairs_iter(lattice, maxdist=rc, cell=cell):
         count += 1
     return count
+
 
 nvertex = []
 durations = []
