@@ -12,8 +12,6 @@ def prefix(L, pre):
 
 
 d = {
-    "sample_py": "".join(open("sample.py").readlines()),
-    "sample2_py": "".join(open("sample2.py").readlines()),
     "benchmark_py": "".join(open("benchmark/benchmark.py").readlines()),
     "version": setup.get_version(),
     "package": setup.get_name(),

@@ -29,3 +29,5 @@ PairList\.egg-info/
 
 dist/
 .eggs/
+
+*.txt

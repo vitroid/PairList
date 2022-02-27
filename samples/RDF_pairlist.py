@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 
-# crude RDF, without Numpy
-
 import sys
 from math import floor, pi
 import numpy as np
 import pairlist as pl
-from test1_rdf import load_gro_o
+import gromacs
 
 
 def main():
-    os, cell = load_gro_o(sys.stdin)
+    atoms, cell = gromacs.load(sys.stdin)
+    os = atoms['O']
     assert len(cell) == 3  # assume rect cell.
     # pairlistはnumpy arrayのみ受け入れる。
     os = np.array(os)
@@ -28,8 +27,9 @@ def main():
     histo = [0.0 for i in range(maxbin)]
 
     # 対とその距離を計算し、ヒストグラムにする。
-    for i, j, r in pl.pairs_fine(rpos, intv * maxbin, cellmat,
-                                 distance=True):
+    # (Pure pythonの場合)
+    for i, j, r in pl.pairs_iter(
+            rpos, intv * maxbin, cellmat, distance=True, engine=(pl.pairs_py, None)):
         # accumulate
         ir = int(r / intv)
         if ir < maxbin:

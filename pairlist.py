@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.2.11.3"
+__version__ = "0.2.12"
 
 import math
 import itertools as it
@@ -142,11 +142,12 @@ def pairs_iter(
         rpos = pos
         rpos2 = pos2
     else:
-        rpos = pos @ cell
+        celli = np.linalg.inv(cell)
+        rpos = pos @ celli
         if pos2 is None:
             rpos2 is None
         else:
-            rpos2 = pos2 @ cell
+            rpos2 = pos2 @ celli
 
     if rpos2 is None:
         return pairs_fine(

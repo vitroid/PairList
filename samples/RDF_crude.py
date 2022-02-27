@@ -4,24 +4,8 @@
 
 import sys
 from math import floor, pi
+import gromacs
 
-
-def load_gro_o(file):
-    """
-    read a gro file from stdin
-    """
-    line = file.readline()
-    line = file.readline()
-    natom = int(line)
-    os = []
-    for i in range(natom):
-        line = file.readline()
-        atomname = line[10:15].replace(' ', '')
-        if atomname in ["O", "OW", "Ow"]:
-            x, y, z = [float(x) for x in line[20:].split()]
-            os.append((x, y, z))
-    cell = [float(x) for x in file.readline().split()]
-    return os, cell
 
 # round int
 
@@ -31,7 +15,8 @@ def rint(x):
 
 
 def main():
-    os, cell = load_gro_o(sys.stdin)
+    atoms, cell = gromacs.load(sys.stdin)
+    os = atoms['O']
     assert len(cell) == 3  # assume rect cell.
     density = len(os) / (cell[0] * cell[1] * cell[2])
 
