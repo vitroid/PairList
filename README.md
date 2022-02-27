@@ -60,7 +60,7 @@ for i, j in pl.pairs_iter(lattice, macdist=1.1 * 3**0.5 / 2,
 
 ``` -->
 
-## Benchmark tests
+<!-- ## Benchmark tests -->
 
 To find the neighbors in a face-centered cubic lattice of size 10x10x10 on a MacBook Air 2021 (Apple Silicon),
 
@@ -158,9 +158,12 @@ print(pairlist_c(lattice, cell), "pairs")
 
 
 
+
 ```
 
+## Algorithm
 
+A simple cell division algorithm is implemented.
 
 ## Demo
 
