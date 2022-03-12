@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.2.12"
+__version__ = "0.2.12.4"
 
 import math
 import itertools as it
@@ -112,10 +112,11 @@ def pairs_fine_slow(xyz, rc, cell, grid=None, distance=True):
 # wrapper
 def pairs_iter(
         pos,
-        maxdist,
-        cell,
+        maxdist=None,
+        cell=None,
         fractional=True,
         pos2=None,
+        rc=None,
         distance=True,
         raw=False,
         engine=(pairs, pairs2)):
@@ -137,6 +138,11 @@ def pairs_iter(
     i,j         indices of a pair
     i,j,distance indices and the distance between the pair (distance=True)
     """
+    logger = getLogger()
+    if rc is not None:
+        logger.warning("rc is deprecated. Use maxdist instead.")
+        assert maxdist is None, "rc and maxdist are specified at a time."
+        maxdist = rc
     grid = None
     if fractional:
         rpos = pos

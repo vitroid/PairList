@@ -40,6 +40,9 @@ test1: CRN1x222.gro
 
 # Section: Deploy
 
+requirements.txt:
+	pipenv lock -r > $@
+
 test-deploy: build
 	twine upload -r pypitest dist/*
 test-install:
