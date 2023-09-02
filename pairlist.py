@@ -208,7 +208,6 @@ def pairs_iter(
         assert maxdist is None, "rc and maxdist are specified at a time."
         maxdist = rc
     if cell is None:
-        assert fractional is None, "Fractional coordinate system is not allowed."
         return pairs_nopbc_iter(pos, maxdist=maxdist, pos2=pos2, distance=distance)
     grid = None
     if fractional:
