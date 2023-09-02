@@ -9,6 +9,8 @@ numpy = "*"
 [dev-packages]
 twine = "*"
 jinja2 = "*"
+networkx = "*"
+genice2 = "*"
 
 [requires]
 python_version = "3.9"

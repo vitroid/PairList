@@ -31,3 +31,8 @@ dist/
 .eggs/
 
 *.txt
+.vscode/configurationCache.log
+.vscode/dryrun.log
+.vscode/settings.json
+.vscode/targets.log
+Pipfile.lock

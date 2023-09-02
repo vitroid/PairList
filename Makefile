@@ -1,6 +1,6 @@
 OBJ=pairlist.o
 TESTS=tests/pairlist-test tests/pairlist-test2 tests/pairlist-test3
-ALL=$(OBJ) 
+ALL=$(OBJ)
 PKGNAME=pairlist
 GENICE=genice2
 
@@ -27,9 +27,9 @@ test: $(ALL) test1
 
 
 CRN1x222.gro:
-	genice CRN1 -r 2 2 2 > $@
+	genice2 CRN1 -r 2 2 2 > $@
 test1: CRN1x222.gro
-	time python samples/HB.py < $< 
+	time python samples/HB.py < $<
 	time python samples/RDF_crude.py < $< > RDF_crude.txt
 	time python samples/RDF_pairlist.py < $< > RDF_pairlist.txt
 
