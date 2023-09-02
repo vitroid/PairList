@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 numpy = "*"
+pairlist = {path = "."}
 
 [dev-packages]
 twine = "*"
