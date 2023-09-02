@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.2.12.4"
+__version__ = "0.3"
 
 import math
 import itertools as it
 import numpy as np
 from logging import getLogger
 from cpairlist import pairs, pairs2
-# from methodtools import lru_cache
 
 
 def Address(pos, grid):
@@ -109,19 +108,84 @@ def pairs_fine_slow(xyz, rc, cell, grid=None, distance=True):
                 yield i, j
 
 
+def pairs_nopbc_iter(pos, maxdist=None, pos2=None, distance=False):
+    """
+    Iterator to find pairs in an open space.
+    """
+    assert pos2 is None, "Pairs for hetero group without PBC is not implemented yet."
+
+    def assign_to_bins(atoms):
+        # occupants[x] is a list of atom labels in a bin x.
+        occupants = dict()
+        for i, pos in enumerate(atoms):
+            # from position to bin
+            ipos = tuple(np.floor(pos / maxdist).astype(int))
+            # insert the atom in the bin
+            if ipos not in occupants:
+                occupants[ipos] = []
+            occupants[ipos].append(i)
+        return occupants
+
+    def nearby(A, hetero=False):
+        """
+        Obtain the list of atoms near A.
+
+        A: Label of the target atom
+        """
+        # bin of A
+        p, q, r = np.floor(pos[A] / maxdist).astype(int)
+
+        # adjacent bins
+        for ix in range(p - 1, p + 2):
+            for iy in range(q - 1, q + 2):
+                for iz in range(r - 1, r + 2):
+                    if (ix, iy, iz) in occupants:
+                        # candidates for the neighbors
+                        for B in occupants[ix, iy, iz]:
+                            # avoid double counts.
+                            if A < B or hetero:
+                                # relative vector
+                                d = pos[A] - pos[B]
+                                d2 = d @ d
+                                # if the distance is shorter than the threshold,
+                                if d2 < maxdist**2:
+                                    yield B, d**0.5
+
+    if pos2 is None:
+        # homo pairs
+        occupants = assign_to_bins(pos)
+        for i in range(len(pos)):
+            for j, L in nearby(i):
+                if distance:
+                    yield i, j, L
+                else:
+                    yield i, j
+
+    else:
+        # hetero pairs
+        occupants = assign_to_bins(pos2)
+        for i in range(len(pos)):
+            for j, L in nearby(i, hetero=True):
+                if distance:
+                    yield i, j, L
+                else:
+                    yield i, j
+
+
 # wrapper
 def pairs_iter(
-        pos,
-        maxdist=None,
-        cell=None,
-        fractional=True,
-        pos2=None,
-        rc=None,
-        distance=True,
-        raw=False,
-        engine=(pairs, pairs2)):
+    pos,
+    maxdist=None,
+    cell=None,
+    fractional=True,
+    pos2=None,
+    rc=None,
+    distance=True,
+    raw=False,
+    engine=(pairs, pairs2),
+):
     """
-    Iterator to find pairs in a cell with periodic boundary conditions.
+    Iterator to find pairs.
 
     Parameters
 
@@ -143,6 +207,9 @@ def pairs_iter(
         logger.warning("rc is deprecated. Use maxdist instead.")
         assert maxdist is None, "rc and maxdist are specified at a time."
         maxdist = rc
+    if cell is None:
+        assert fractional is None, "Fractional coordinate system is not allowed."
+        return pairs_nopbc_iter(pos, maxdist=maxdist, pos2=pos2, distance=distance)
     grid = None
     if fractional:
         rpos = pos
@@ -157,13 +224,8 @@ def pairs_iter(
 
     if rpos2 is None:
         return pairs_fine(
-            rpos,
-            maxdist,
-            cell,
-            grid=grid,
-            distance=distance,
-            raw=raw,
-            engine=engine[0])
+            rpos, maxdist, cell, grid=grid, distance=distance, raw=raw, engine=engine[0]
+        )
     else:
         return pairs_fine_hetero(
             rpos,
@@ -173,18 +235,12 @@ def pairs_iter(
             grid=grid,
             distance=distance,
             raw=raw,
-            engine=engine[1])
+            engine=engine[1],
+        )
 
 
 # fully numpy style
-def pairs_fine(
-        xyz,
-        rc,
-        cell,
-        grid=None,
-        distance=True,
-        raw=False,
-        engine=pairs):
+def pairs_fine(xyz, rc, cell, grid=None, distance=True, raw=False, engine=pairs):
     logger = getLogger()
     if grid is None:
         grid = determine_grid(cell, rc)
@@ -261,14 +317,8 @@ def pairs_fine_hetero_slow(xyz, xyz2, rc, cell, grid=None, distance=True):
 
 
 def pairs_fine_hetero(
-        xyz,
-        xyz2,
-        rc,
-        cell,
-        grid=None,
-        distance=True,
-        raw=False,
-        engine=pairs2):
+    xyz, xyz2, rc, cell, grid=None, distance=True, raw=False, engine=pairs2
+):
     logger = getLogger()
     if grid is None:
         grid = determine_grid(cell, rc)
@@ -337,7 +387,7 @@ def determine_grid(cell, radius):
     # Check the lengths of four diagonals.
     logger.debug("Grid divisions: {0}".format(np.floor(gf)))
     # print(cell,radius,gf)
-    #import sys
+    # import sys
     # sys.exit(1)
     return np.floor(gf).astype(int)
 
@@ -348,19 +398,15 @@ def main():
         for y in range(2):
             for z in range(2):
                 xyz.append(
-                    np.array(
-                        (x / 100. + 1,
-                         y / 100. + 1,
-                         z / 100. + 1)) / 4.)
+                    np.array((x / 100.0 + 1, y / 100.0 + 1, z / 100.0 + 1)) / 4.0
+                )
     xyz2 = []
     for x in range(2):
         for y in range(2):
             for z in range(2):
                 xyz2.append(
-                    np.array(
-                        (x / 100. + 2,
-                         y / 100. + 1,
-                         z / 100. + 1)) / 4.)
+                    np.array((x / 100.0 + 2, y / 100.0 + 1, z / 100.0 + 1)) / 4.0
+                )
     xyz = np.array(xyz)
     xyz2 = np.array(xyz2)
     box = np.diag((4, 4, 4))
