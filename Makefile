@@ -11,19 +11,12 @@ all: $(OBJ) README.md
 
 test: $(ALL) test1
 	echo Done.
-	# tests/pairlist-test
-	# tests/pairlist-test2
-	# tests/pairlist-test3
 %.o: %.c
 	$(CC) -c -g $< -o $@ -I.
 
 %: %.c
 %: %.o pairlist.o
 	$(CC) -g $^ -o $@
-# pairlist-test2.data:
-# 	$(GENICE) --format q --rep 3 3 3 1h --water tip4p > $@
-# pairlist-test3.gro: Makefile
-# 	$(GENICE) --format g --rep 10 10 10  1h > $@
 
 
 CRN1x222.gro:

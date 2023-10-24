@@ -58,8 +58,6 @@ It requires [GenIce](https://github.com/vitroid/GenIce) to make the test data.
 
 ```shell
 % make test
-% make test2
-% make test3
 ```
 
 ## Requirements

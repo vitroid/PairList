@@ -2,7 +2,7 @@
 Generates the pair list of atoms that are closer to each other than the
 given threshold under the periodic boundary conditions.
 
-version 0.2.12.4
+version 0.3.0.2
 
 ## Usage
 
@@ -129,8 +129,6 @@ It requires [GenIce](https://github.com/vitroid/GenIce) to make the test data.
 
 ```shell
 % make test
-% make test2
-% make test3
 ```
 
 ## Requirements

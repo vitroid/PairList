@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.3.0.1"
+__version__ = "0.3.0.2"
 
 import math
 import itertools as it
@@ -149,7 +149,7 @@ def pairs_nopbc_iter(pos, maxdist=None, pos2=None, distance=False):
                                 d2 = d @ d
                                 # if the distance is shorter than the threshold,
                                 if d2 < maxdist**2:
-                                    yield B, d**0.5
+                                    yield B, d2**0.5
 
     if pos2 is None:
         # homo pairs
@@ -174,14 +174,14 @@ def pairs_nopbc_iter(pos, maxdist=None, pos2=None, distance=False):
 
 # wrapper
 def pairs_iter(
-    pos,
-    maxdist=None,
-    cell=None,
-    fractional=True,
-    pos2=None,
-    rc=None,
-    distance=True,
-    raw=False,
+    pos: np.ndarray,
+    maxdist: float = None,
+    cell: np.ndarray[3, 3] = None,
+    fractional: bool = True,
+    pos2: np.ndarray = None,
+    rc: float = None,
+    distance: bool = True,
+    raw: bool = False,
     engine=(pairs, pairs2),
 ):
     """
@@ -197,7 +197,7 @@ def pairs_iter(
     distance:   If true, distance between two positions are also returned.
     raw:        Return the result in arrays.
 
-    Return values
+    Yields
 
     i,j         indices of a pair
     i,j,distance indices and the distance between the pair (distance=True)
