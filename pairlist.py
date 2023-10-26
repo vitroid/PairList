@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.3.0.3"
+__version__ = "0.3.1"
 
 import math
 import itertools as it
@@ -112,7 +112,7 @@ def pairs_nopbc_iter(pos, maxdist=None, pos2=None, distance=False):
     """
     Iterator to find pairs in an open space.
     """
-    assert pos2 is None, "Pairs for hetero group without PBC is not implemented yet."
+    # assert pos2 is None, "Pairs for hetero group without PBC is not implemented yet."
 
     def assign_to_bins(atoms):
         # occupants[x] is a list of atom labels in a bin x.
@@ -143,7 +143,14 @@ def pairs_nopbc_iter(pos, maxdist=None, pos2=None, distance=False):
                         # candidates for the neighbors
                         for B in occupants[ix, iy, iz]:
                             # avoid double counts.
-                            if A < B or hetero:
+                            if hetero:
+                                # relative vector
+                                d = pos[A] - pos2[B]
+                                d2 = d @ d
+                                # if the distance is shorter than the threshold,
+                                if d2 < maxdist**2:
+                                    yield B, d2**0.5
+                            elif A < B:
                                 # relative vector
                                 d = pos[A] - pos[B]
                                 d2 = d @ d
