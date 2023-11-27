@@ -1,8 +1,8 @@
-# {{package}}
+# {{project.name}}
 Generates the pair list of atoms that are closer to each other than the
 given threshold under the periodic boundary conditions.
 
-version {{version}}
+version {{project.version}}
 
 ## Usage
 
@@ -22,7 +22,7 @@ Here is a sample code to use it.
 
 <!-- ## Benchmark tests -->
 
-To find the neighbors in a face-centered cubic lattice of size 10x10x10 on a MacBook Air 2021 (Apple Silicon),
+To find the neighbors in a face-centered cubic lattice of size 10x10x10 on a MacBook Air 2021 (Apple M1),
 
 ```shell
 $ python benchmark.py
@@ -64,7 +64,8 @@ It requires [GenIce](https://github.com/vitroid/GenIce) to make the test data.
 
 ## Requirements
 
-{{requires}}
+{% for item in project.dependencies %}* {{item}}
+{% endfor %}
 
 ## Bugs
 

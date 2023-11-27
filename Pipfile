@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 numpy = "*"
-pairlist = {path = "."}
 
 [dev-packages]
 twine = "*"
@@ -13,6 +12,8 @@ jinja2 = "*"
 networkx = "*"
 genice2 = "*"
 pdoc3 = "*"
+build = "*"
+toml = "*"
 
 [requires]
 python_version = "3.9"

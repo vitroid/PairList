@@ -32,26 +32,26 @@ setup(
         )
     ],
     headers=["pairlist.h"],
-    name="PairList",
-    version=metadata["version"],
-    zip_safe=False,
-    py_modules=["pairlist"],
-    description="Generate neighbor list for the particles in a periodic boundary cell.",
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.5",
-    ],
-    author="Masakazu Matsumoto",
-    author_email="vitroid@gmail.com",
-    url="https://github.com/vitroid/PairList/",
-    keywords=[
-        "pairlist",
-    ],
-    license="MIT",
-    install_requires=[
-        "numpy",
-    ],
-    entry_points={"console_scripts": ["pairlist = pairlist:main"]},
+    # name="PairList",
+    # version=metadata["version"],
+    # zip_safe=False,
+    # py_modules=["pairlist"],
+    # description="Generate neighbor list for the particles in a periodic boundary cell.",
+    # classifiers=[
+    #     "Development Status :: 4 - Beta",
+    #     "Intended Audience :: Developers",
+    #     "Programming Language :: Python",
+    #     "Programming Language :: Python :: 3.5",
+    # ],
+    # author="Masakazu Matsumoto",
+    # author_email="vitroid@gmail.com",
+    # url="https://github.com/vitroid/PairList/",
+    # keywords=[
+    #     "pairlist",
+    # ],
+    # license="MIT",
+    # install_requires=[
+    #     "numpy",
+    # ],
+    # entry_points={"console_scripts": ["pairlist = pairlist:main"]},
 )

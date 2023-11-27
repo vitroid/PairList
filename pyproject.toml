@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "pairlist"
+version = "0.4" # major.minor.fix
+authors = [
+  { name="Masakazu Matsumoto", email="vitroid@gmail.com" },
+]
+description = "Generate neighbor list for the particles in a periodic boundary cell."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    # "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = ["numpy",]
+
+# headers=["pairlist.h",]
+# py_modules=["pairlist"]
+# license="MIT"
+
+[project.urls]
+"Homepage" = "https://github.com/vitroid/PairList"
+"Bug Tracker" = "https://github.com/vitroid/PairList/issues"
+"manual" = "https://vitroid.github.io/PairList/pairlist.html"

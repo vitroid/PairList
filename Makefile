@@ -52,7 +52,8 @@ install:
 uninstall:
 	-pip uninstall -y pairlist
 build: README.md
-	./setup.py sdist # bdist_wheel
+	python3 -m build
+	# ./setup.py sdist # bdist_wheel
 
 
 deploy: build
