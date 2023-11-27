@@ -8,7 +8,9 @@ version {{version}}
 
 See `pairlist.h` for the function definition and `pairlist-test.c` for usage.
 
-Python API is served in pairlist.py. Here is a sample code to use it.
+Python API is served in pairlist.py. The API document is [here](https://vitroid.github.io/PairList).
+
+Here is a sample code to use it.
 
 <!-- ```python
 {{sample_py}}

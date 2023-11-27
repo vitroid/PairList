@@ -1,7 +1,35 @@
-#!/usr/bin/env python
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>pairlist API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>pairlist</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
-__version__ = "0.3.1"
+__version__ = &#34;0.3.1&#34;
 
 import math
 import itertools as it
@@ -10,7 +38,7 @@ from logging import getLogger
 from cpairlist import pairs, pairs2
 from typing import Generator
 
-__all__ = ["pairs_iter"]
+__all__ = [&#34;pairs_iter&#34;]
 
 
 def Address(pos, grid):
@@ -33,9 +61,9 @@ def ArrangeAddress(xyz, grid):
 def pairs_py(xyz, GX, GY, GZ):
     grid = np.array([GX, GY, GZ])
     logger = getLogger()
-    logger.debug("START Arrange")
+    logger.debug(&#34;START Arrange&#34;)
     residents = ArrangeAddress(xyz, grid)
-    logger.debug("END Arrange")
+    logger.debug(&#34;END Arrange&#34;)
 
     # key-value pairs in the dictionary
     donecellpair = set()
@@ -68,10 +96,10 @@ def pairs2_py(xyz, xyz2, GX, GY, GZ):
 
 def _pairs_hetero(xyz, xyz2, grid):
     logger = getLogger()
-    logger.debug("START Arrange")
+    logger.debug(&#34;START Arrange&#34;)
     residents = ArrangeAddress(xyz, grid)
     residents2 = ArrangeAddress(xyz2, grid)
-    logger.debug("END Arrange")
+    logger.debug(&#34;END Arrange&#34;)
 
     # key-value pairs in the dictionary
     donecellpair = set()
@@ -104,7 +132,7 @@ def pairs_fine_slow(xyz, rc, cell, grid=None, distance=True):
         d -= np.floor(d + 0.5)
         d = np.dot(d, cell)
         rr = np.dot(d, d)
-        if rr < rc**2:
+        if rr &lt; rc**2:
             if distance:
                 yield i, j, math.sqrt(rr)
             else:
@@ -112,10 +140,10 @@ def pairs_fine_slow(xyz, rc, cell, grid=None, distance=True):
 
 
 def pairs_nopbc_iter(pos, maxdist=None, pos2=None, distance=False):
-    """
+    &#34;&#34;&#34;
     Iterator to find pairs in an open space.
-    """
-    # assert pos2 is None, "Pairs for hetero group without PBC is not implemented yet."
+    &#34;&#34;&#34;
+    # assert pos2 is None, &#34;Pairs for hetero group without PBC is not implemented yet.&#34;
 
     def assign_to_bins(atoms):
         # occupants[x] is a list of atom labels in a bin x.
@@ -130,11 +158,11 @@ def pairs_nopbc_iter(pos, maxdist=None, pos2=None, distance=False):
         return occupants
 
     def nearby(A, hetero=False):
-        """
+        &#34;&#34;&#34;
         Obtain the list of atoms near A.
 
         A: Label of the target atom
-        """
+        &#34;&#34;&#34;
         # bin of A
         p, q, r = np.floor(pos[A] / maxdist).astype(int)
 
@@ -151,14 +179,14 @@ def pairs_nopbc_iter(pos, maxdist=None, pos2=None, distance=False):
                                 d = pos[A] - pos2[B]
                                 d2 = d @ d
                                 # if the distance is shorter than the threshold,
-                                if d2 < maxdist**2:
+                                if d2 &lt; maxdist**2:
                                     yield B, d2**0.5
-                            elif A < B:
+                            elif A &lt; B:
                                 # relative vector
                                 d = pos[A] - pos[B]
                                 d2 = d @ d
                                 # if the distance is shorter than the threshold,
-                                if d2 < maxdist**2:
+                                if d2 &lt; maxdist**2:
                                     yield B, d2**0.5
 
     if pos2 is None:
@@ -193,8 +221,8 @@ def pairs_iter(
     distance: bool = True,
     _raw: bool = False,
     _engine=(pairs, pairs2),
-) -> Generator[tuple, None, None]:
-    """Yields pairs within the specified distance.
+) -&gt; Generator[tuple, None, None]:
+    &#34;&#34;&#34;Yields pairs within the specified distance.
 
     Args:
         pos (np.ndarray): Positions of the atoms. (in fractional or absolute coordinate)
@@ -206,11 +234,11 @@ def pairs_iter(
 
     Yields:
         Generator[tuple, None, None]: indices of a pair | indices and the distance between the pair (distance=True)
-    """
+    &#34;&#34;&#34;
     logger = getLogger()
     if rc is not None:
-        logger.warning("rc is deprecated. Use maxdist instead.")
-        assert maxdist is None, "rc and maxdist are specified at a time."
+        logger.warning(&#34;rc is deprecated. Use maxdist instead.&#34;)
+        assert maxdist is None, &#34;rc and maxdist are specified at a time.&#34;
         maxdist = rc
     if cell is None:
         return pairs_nopbc_iter(pos, maxdist=maxdist, pos2=pos2, distance=distance)
@@ -257,7 +285,7 @@ def pairs_fine(xyz, rc, cell, grid=None, distance=True, raw=False, engine=pairs)
     p = engine(xyz, *grid)
     idx0 = p[:, 0]
     # for i in range(idx0.shape[0]):
-    #    if idx0[i] > 1000:
+    #    if idx0[i] &gt; 1000:
     #        print(i,idx0[i])
     idx1 = p[:, 1]
     p0 = xyz[idx0]
@@ -266,7 +294,7 @@ def pairs_fine(xyz, rc, cell, grid=None, distance=True, raw=False, engine=pairs)
     d -= np.floor(d + 0.5)
     a = np.dot(d, cell)
     L = np.linalg.norm(a, axis=1)
-    cond = L < rc
+    cond = L &lt; rc
     # pickup elements satisfying the condition.
     j0 = np.compress(cond, idx0)
     j1 = np.compress(cond, idx1)
@@ -299,7 +327,7 @@ def pairs_crude(xyz, rc, cell, distance=True):
         r = np.dot(d, cell)
         rr = np.dot(r, r)
 
-        if rr < rc**2:
+        if rr &lt; rc**2:
             # logger.debug((d,r,rr,rc**2))
             if distance:
                 yield i, j, math.sqrt(rr)
@@ -319,7 +347,7 @@ def pairs_fine_hetero_slow(xyz, xyz2, rc, cell, grid=None, distance=True):
         d = np.dot(d, cell)
         rr = np.dot(d, d)
 
-        if rr < rc**2:
+        if rr &lt; rc**2:
             if distance:
                 yield i, j, math.sqrt(rr)
             else:
@@ -341,7 +369,7 @@ def pairs_fine_hetero(
     d -= np.floor(d + 0.5)
     a = np.dot(d, cell)
     L = np.linalg.norm(a, axis=1)
-    cond = L < rc
+    cond = L &lt; rc
     # pickup elements satisfying the condition.
     j0 = np.compress(cond, idx0)
     j1 = np.compress(cond, idx1)
@@ -362,18 +390,18 @@ def pairs_fine_hetero(
 
 # @lru_cache(maxsize=None)
 def determine_grid(cell, radius):
-    """
+    &#34;&#34;&#34;
     Determine grid division based on the cutoff radius.
-    """
+    &#34;&#34;&#34;
     logger = getLogger()
     ct = cell  # .transpose()
     # Cell vectors
     a = ct[0]
     b = ct[1]
     c = ct[2]
-    logger.debug("cell a {0}".format(a))
-    logger.debug("cell b {0}".format(b))
-    logger.debug("cell c {0}".format(c))
+    logger.debug(&#34;cell a {0}&#34;.format(a))
+    logger.debug(&#34;cell b {0}&#34;.format(b))
+    logger.debug(&#34;cell c {0}&#34;.format(c))
     # Edge lengths
     al = np.linalg.norm(a)  # vector length
     bl = np.linalg.norm(b)
@@ -388,14 +416,14 @@ def determine_grid(cell, radius):
     cn = np.dot(c, np.cross(ae, be))
     # required number of grid cells
     gf = np.array([an / radius, bn / radius, cn / radius])
-    if gf[0] < 1.0:
+    if gf[0] &lt; 1.0:
         gf[0] = 1.0
-    if gf[1] < 1.0:
+    if gf[1] &lt; 1.0:
         gf[1] = 1.0
-    if gf[2] < 1.0:
+    if gf[2] &lt; 1.0:
         gf[2] = 1.0
     # Check the lengths of four diagonals.
-    logger.debug("Grid divisions: {0}".format(np.floor(gf)))
+    logger.debug(&#34;Grid divisions: {0}&#34;.format(np.floor(gf)))
     # print(cell,radius,gf)
     # import sys
     # sys.exit(1)
@@ -425,5 +453,132 @@ def main():
         print(i, j, l)
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == &#34;__main__&#34;:
+    main()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="pairlist.pairs_iter"><code class="name flex">
+<span>def <span class="ident">pairs_iter</span></span>(<span>pos: numpy.ndarray, maxdist: float = None, cell: numpy.ndarray = None, fractional: bool = True, pos2: numpy.ndarray = None, rc: float = None, distance: bool = True) ‑> Generator[tuple, None, None]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Yields pairs within the specified distance.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pos</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Positions of the atoms. (in fractional or absolute coordinate)</dd>
+<dt>maxdist (formerly rc) (float, optional): Upper limit of the pair distance (in the same unit as the cell). Defaults to None.</dt>
+<dt><strong><code>cell</code></strong> :&ensp;<code>np.ndarray[3, 3]</code>, optional</dt>
+<dd>Shape of the cell in a 3x3 numpy array. [[ax,ay,az],[bx,by,bz],[cx,cy,cz]]. Defaults to None.</dd>
+<dt><strong><code>fractional</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If true, pos must be given in fractional coordinate. Defaults to True.</dd>
+<dt><strong><code>pos2</code></strong> :&ensp;<code>np.ndarray</code>, optional</dt>
+<dd>Specify when you want to find the pairs between two sets of positions. Defaults to None.</dd>
+<dt><strong><code>distance</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If true, distance between two positions are also returned. Defaults to True.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><code>Generator[tuple, None, None]</code></dt>
+<dd>indices of a pair | indices and the distance between the pair (distance=True)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pairs_iter(
+    pos: np.ndarray,
+    maxdist: float = None,
+    cell: np.ndarray[3, 3] = None,
+    fractional: bool = True,
+    pos2: np.ndarray = None,
+    rc: float = None,
+    distance: bool = True,
+    _raw: bool = False,
+    _engine=(pairs, pairs2),
+) -&gt; Generator[tuple, None, None]:
+    &#34;&#34;&#34;Yields pairs within the specified distance.
+
+    Args:
+        pos (np.ndarray): Positions of the atoms. (in fractional or absolute coordinate)
+        maxdist (formerly rc) (float, optional): Upper limit of the pair distance (in the same unit as the cell). Defaults to None.
+        cell (np.ndarray[3, 3], optional): Shape of the cell in a 3x3 numpy array. [[ax,ay,az],[bx,by,bz],[cx,cy,cz]]. Defaults to None.
+        fractional (bool, optional): If true, pos must be given in fractional coordinate. Defaults to True.
+        pos2 (np.ndarray, optional): Specify when you want to find the pairs between two sets of positions. Defaults to None.
+        distance (bool, optional): If true, distance between two positions are also returned. Defaults to True.
+
+    Yields:
+        Generator[tuple, None, None]: indices of a pair | indices and the distance between the pair (distance=True)
+    &#34;&#34;&#34;
+    logger = getLogger()
+    if rc is not None:
+        logger.warning(&#34;rc is deprecated. Use maxdist instead.&#34;)
+        assert maxdist is None, &#34;rc and maxdist are specified at a time.&#34;
+        maxdist = rc
+    if cell is None:
+        return pairs_nopbc_iter(pos, maxdist=maxdist, pos2=pos2, distance=distance)
+    grid = None
+    if fractional:
+        rpos = pos
+        rpos2 = pos2
+    else:
+        celli = np.linalg.inv(cell)
+        rpos = pos @ celli
+        if pos2 is None:
+            rpos2 = None
+        else:
+            rpos2 = pos2 @ celli
+
+    if rpos2 is None:
+        return pairs_fine(
+            rpos,
+            maxdist,
+            cell,
+            grid=grid,
+            distance=distance,
+            raw=_raw,
+            engine=_engine[0],
+        )
+    else:
+        return pairs_fine_hetero(
+            rpos,
+            rpos2,
+            maxdist,
+            cell,
+            grid=grid,
+            distance=distance,
+            raw=_raw,
+            engine=_engine[1],
+        )</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="pairlist.pairs_iter" href="#pairlist.pairs_iter">pairs_iter</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

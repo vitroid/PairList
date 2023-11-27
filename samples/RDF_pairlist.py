@@ -9,7 +9,7 @@ import gromacs
 
 def main():
     atoms, cell = gromacs.load(sys.stdin)
-    os = atoms['O']
+    os = atoms["O"]
     assert len(cell) == 3  # assume rect cell.
     # pairlistはnumpy arrayのみ受け入れる。
     os = np.array(os)
@@ -29,7 +29,8 @@ def main():
     # 対とその距離を計算し、ヒストグラムにする。
     # (Pure pythonの場合)
     for i, j, r in pl.pairs_iter(
-            rpos, intv * maxbin, cellmat, distance=True, engine=(pl.pairs_py, None)):
+        rpos, intv * maxbin, cellmat, distance=True, _engine=(pl._pairs_py, None)
+    ):
         # accumulate
         ir = int(r / intv)
         if ir < maxbin:
@@ -38,7 +39,7 @@ def main():
     for ir, h in enumerate(histo):
         r = ir * intv
         # volume of the onion shell
-        dv = ((r + intv)**3 - r**3) * 4. * pi / 3.
+        dv = ((r + intv) ** 3 - r**3) * 4.0 * pi / 3.0
         # average number of particles in the shell
         dn = dv * density
         print(r, h / dn / len(os) * 2)

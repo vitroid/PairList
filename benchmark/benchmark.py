@@ -47,8 +47,8 @@ def pairlist_py(lattice, cell, rc=1.1):
     "Neighboring pair list by pairlist in pure python."
     count = 0
     for i, j, d in pl.pairs_iter(
-            lattice, maxdist=rc, cell=cell, engine=(
-            pairs_py, pairs2_py)):
+        lattice, maxdist=rc, cell=cell, _engine=(pairs_py, pairs2_py)
+    ):
         count += 1
     return count
 

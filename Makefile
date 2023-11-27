@@ -26,9 +26,14 @@ test1: CRN1x222.gro
 	time python samples/RDF_crude.py < $< > RDF_crude.txt
 	time python samples/RDF_pairlist.py < $< > RDF_pairlist.txt
 
+# https://qiita.com/yukinarit/items/0996180032c077443efb
+# https://zenn.dev/atu4403/articles/python-githubpages
+doc: README.md # CITATION.cff 
+	pdoc3 --html -o docs --force pairlist.py
+
+
 %: temp_% replacer.py pairlist.py benchmark/benchmark.py
 	python3 replacer.py < $< > $@
-	-fgrep '}}' $@
 
 
 # Section: Deploy

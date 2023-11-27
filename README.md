@@ -2,13 +2,15 @@
 Generates the pair list of atoms that are closer to each other than the
 given threshold under the periodic boundary conditions.
 
-version 0.3.0.2
+version 0.3.1
 
 ## Usage
 
 See `pairlist.h` for the function definition and `pairlist-test.c` for usage.
 
-Python API is served in pairlist.py. Here is a sample code to use it.
+Python API is served in pairlist.py. The API document is [here](https://vitroid.github.io/PairList).
+
+Here is a sample code to use it.
 
 <!-- ```python
 
@@ -92,8 +94,8 @@ def pairlist_py(lattice, cell, rc=1.1):
     "Neighboring pair list by pairlist in pure python."
     count = 0
     for i, j, d in pl.pairs_iter(
-            lattice, maxdist=rc, cell=cell, engine=(
-            pairs_py, pairs2_py)):
+        lattice, maxdist=rc, cell=cell, _engine=(pairs_py, pairs2_py)
+    ):
         count += 1
     return count
 
