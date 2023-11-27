@@ -1,11 +1,13 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+# requires = ["hatchling"]
+# build-backend = "hatchling.build"
+requires = ["setuptools", "wheel", "numpy"]
+build-backend = "setuptools.build_meta"
 
 
 [project]
 name = "pairlist"
-version = "0.4" # major.minor.fix
+version = "0.4.1" # major.minor.fix
 authors = [
   { name="Masakazu Matsumoto", email="vitroid@gmail.com" },
 ]
@@ -20,8 +22,8 @@ classifiers = [
 dependencies = ["numpy",]
 
 # headers=["pairlist.h",]
-# py_modules=["pairlist"]
-# license="MIT"
+py_modules=["pairlist"]
+license="MIT"
 
 [project.urls]
 "Homepage" = "https://github.com/vitroid/PairList"

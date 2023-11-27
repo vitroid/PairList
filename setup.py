@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 
 # from distutils.core import setup, Extension
-import codecs
 import os
-import re
 
 # This may cause an error in installation because numpy is still not installed.
-from numpy.distutils.misc_util import get_numpy_include_dirs
+from numpy import get_include
 from setuptools import Extension, dist, setup
 
 # Copied from wheel package
 here = os.path.abspath(os.path.dirname(__file__))
 
-with codecs.open(
-    os.path.join(os.path.dirname(__file__), "pairlist.py"), encoding="utf8"
-) as version_file:
-    metadata = dict(re.findall(r"""__([a-z]+)__ = "([^"]+)""", version_file.read()))
+# with codecs.open(
+#     os.path.join(os.path.dirname(__file__), "pairlist.py"), encoding="utf8"
+# ) as version_file:
+#     metadata = dict(re.findall(r"""__([a-z]+)__ = "([^"]+)""", version_file.read()))
 
 # bootstrap numpy
 dist.Distribution().fetch_build_eggs(["numpy"])
@@ -23,12 +21,14 @@ dist.Distribution().fetch_build_eggs(["numpy"])
 setup(
     ext_modules=[
         Extension(
-            "cpairlist",
-            ["cpairlist.c", "pairlist.c"],
+            name="cpairlist",
+            sources=["cpairlist.c", "pairlist.c"],
             extra_compile_args=[
                 "-std=c99",
             ],
-            include_dirs=get_numpy_include_dirs(),
+            include_dirs=[
+                get_include(),
+            ],
         )
     ],
     headers=["pairlist.h"],
