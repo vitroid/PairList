@@ -18,7 +18,7 @@ def main():
     cellmat = np.diag(cell)
     # 相対位置に換算する(直方体なので簡単)
     rpos = os / cell
-    density = os.shape[0] / np.product(cell)
+    density = os.shape[0] / np.prod(cell)
 
     # histogram
     intv = 0.003
@@ -29,7 +29,7 @@ def main():
     # 対とその距離を計算し、ヒストグラムにする。
     # (Pure pythonの場合)
     for i, j, r in pl.pairs_iter(
-        rpos, intv * maxbin, cellmat, distance=True, _engine=(pl._pairs_py, None)
+        rpos, intv * maxbin, cellmat, distance=True, _engine=(pl.pairs_py, None)
     ):
         # accumulate
         ir = int(r / intv)
