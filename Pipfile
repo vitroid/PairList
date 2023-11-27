@@ -14,6 +14,7 @@ genice2 = "*"
 pdoc3 = "*"
 build = "*"
 toml = "*"
+setuptools = "*"
 
 [requires]
 python_version = "3.9"

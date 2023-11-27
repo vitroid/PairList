@@ -2,12 +2,13 @@
 # requires = ["hatchling"]
 # build-backend = "hatchling.build"
 requires = ["setuptools", "wheel", "numpy"]
+# requires = ["setuptools", "wheel", "numpy"]
 build-backend = "setuptools.build_meta"
 
 
 [project]
 name = "pairlist"
-version = "0.4.1" # major.minor.fix
+version = "0.4.6" # major.minor.fix
 authors = [
   { name="Masakazu Matsumoto", email="vitroid@gmail.com" },
 ]
@@ -19,13 +20,19 @@ classifiers = [
     # "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = ["numpy",]
+dependencies = ["numpy","setuptools",]
 
-# headers=["pairlist.h",]
-py_modules=["pairlist"]
-license="MIT"
+[project.license]
+text="MIT"
 
 [project.urls]
 "Homepage" = "https://github.com/vitroid/PairList"
 "Bug Tracker" = "https://github.com/vitroid/PairList/issues"
 "manual" = "https://vitroid.github.io/PairList/pairlist.html"
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+# test-deployだとなんべんやっても古いnumpyがインストールされて動かない。
+# deployだとインストールは成功するが、モジュールが見付けられない。
+# 
