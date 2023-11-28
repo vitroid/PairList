@@ -10,18 +10,6 @@ See `pairlist.h` for the function definition and `pairlist-test.c` for usage.
 
 Python API is served in pairlist.py. The API document is [here](https://vitroid.github.io/PairList/pairlist.html).
 
-Here is a sample code to use it.
-
-<!-- ```python
-
-```
-
-```python
-
-``` -->
-
-<!-- ## Benchmark tests -->
-
 To find the neighbors in a face-centered cubic lattice of size 10x10x10 on a MacBook Air 2021 (Apple Silicon),
 
 ```shell

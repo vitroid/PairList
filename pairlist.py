@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # even: stable; odd: develop
+"""
+.. include:: ./README.md
+"""
+
 __version__ = "0.3.2"
 
 import math

@@ -11,8 +11,8 @@ twine = "*"
 jinja2 = "*"
 networkx = "*"
 genice2 = "*"
-pdoc3 = "*"
 pairlist = "*"
+pdoc = "*"
 
 [requires]
 python_version = "3.9"

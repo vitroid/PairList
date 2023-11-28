@@ -29,7 +29,7 @@ test1: CRN1x222.gro
 # https://qiita.com/yukinarit/items/0996180032c077443efb
 # https://zenn.dev/atu4403/articles/python-githubpages
 doc: README.md # CITATION.cff 
-	pdoc3 --html -o docs --force pairlist.py
+	pdoc -o docs ./pairlist.py --docformat google
 
 
 %: temp_% replacer.py pairlist.py benchmark/benchmark.py
