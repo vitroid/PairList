@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "pairlist"
-version = "0.5.1.1"
+version = "0.5.1.2"
 description = "Generate neighbor list for the particles in a periodic boundary cell."
 authors = ["vitroid <vitroid@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+include = [{path = "csource/"}]
 
 [tool.poetry.build]
 script = "build.py"
@@ -21,6 +22,7 @@ networkx = "^3.2.1"
 genice = {path = "../GenIce2"}
 jinja2 = "^3.1.2"
 toml = "^0.10.2"
+pdoc = "^14.1.0"
 
 [build-system]
 requires = ["poetry-core", "setuptools", "numpy"]

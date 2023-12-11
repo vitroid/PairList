@@ -15,7 +15,7 @@ ext_modules = [
         include_dirs=[
             np.get_include(),
         ],
-        sources=["cpairlist.c", "pairlist.c"],
+        sources=["csource/cpairlist.c", "csource/pairlist.c"],
         extra_compile_args=[
             "-std=c99",
         ],
