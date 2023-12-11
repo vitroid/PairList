@@ -1,8 +1,8 @@
-# {{package}}
+# {{tool.poetry.name}}
 Generates the pair list of atoms that are closer to each other than the
 given threshold under the periodic boundary conditions.
 
-version {{version}}
+version {{tool.poetry.version}}
 
 ## Usage
 
@@ -52,7 +52,8 @@ It requires [GenIce](https://github.com/vitroid/GenIce) to make the test data.
 
 ## Requirements
 
-{{requires}}
+{% for item in tool.poetry.dependencies %}* {{item}}
+{% endfor %}
 
 ## Bugs
 

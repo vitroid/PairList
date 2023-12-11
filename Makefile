@@ -55,11 +55,6 @@ check:
 	poetry check
 
 
-deploy: build
-	twine upload --repository pypi dist/*
-check:
-	./setup.py check
-
 
 # Section: Develop
 

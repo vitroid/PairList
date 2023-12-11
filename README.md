@@ -1,8 +1,8 @@
-# PairList
+# pairlist
 Generates the pair list of atoms that are closer to each other than the
 given threshold under the periodic boundary conditions.
 
-version 0.3.2
+version 0.5.1.1
 
 ## Usage
 
@@ -123,6 +123,7 @@ It requires [GenIce](https://github.com/vitroid/GenIce) to make the test data.
 
 ## Requirements
 
+* python
 * numpy
 
 

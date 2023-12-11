@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 import sys
-import distutils.core
-from logging import getLogger
 from jinja2 import Template
-
-setup = distutils.core.run_setup("setup.py")
+import toml
 
 
 def prefix(L, pre):
     return pre + ("\n" + pre).join(L) + "\n"
 
 
-d = {
+d = toml.load("pyproject.toml")
+d |= {
     "benchmark_py": "".join(open("benchmark/benchmark.py").readlines()),
-    "version": setup.get_version(),
-    "package": setup.get_name(),
-    "url": setup.get_url(),
-    "requires": prefix(setup.install_requires, "* "),
+    # "version": setup.get_version(),
+    # "package": setup.get_name(),
+    # "url": setup.get_url(),
+    # "requires": prefix(setup.install_requires, "* "),
 }
 
 
