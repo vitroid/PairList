@@ -41,18 +41,18 @@ doc: README.md # CITATION.cff
 requirements.txt:
 	pipenv lock -r > $@
 
-test-deploy: build
-	twine upload -r pypitest dist/*
+test-deploy:
+	poetry publish --build -r testpypi
 test-install:
-	pip install --no-cache-dir --index-url https://test.pypi.org/simple/ $(PKGNAME)
-
-
-install:
-	./setup.py install
+	pip install --index-url https://test.pypi.org/simple/ $(PKGNAME)
 uninstall:
-	-pip uninstall -y pairlist
-build: README.md
-	./setup.py sdist # bdist_wheel
+	-pip uninstall -y $(PKGNAME)
+build: README.md $(wildcard cycles/*.py)
+	poetry build
+deploy:
+	poetry publish --build
+check:
+	poetry check
 
 
 deploy: build
@@ -70,3 +70,4 @@ clean:
 	-rm $(ALL) *.so *~ */*~ *.o *.gro *.rdf
 	-rm -rf build dist
 	-rm -rf PairList.egg-info
+	-rm setup.py # Generated automatically by Poetry

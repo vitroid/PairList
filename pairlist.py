@@ -5,8 +5,6 @@
 .. include:: ./README.md
 """
 
-__version__ = "0.3.2"
-
 import math
 import itertools as it
 import numpy as np
