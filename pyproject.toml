@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pairlist"
-version = "0.5.1.3"
+version = "0.6"
 description = "Generate neighbor list for the particles in a periodic boundary cell."
 authors = ["vitroid <vitroid@gmail.com>"]
 license = "MIT"
@@ -13,7 +13,7 @@ generate-setup-file = true
 
 [tool.poetry.dependencies]
 python = "^3.9"
-numpy = "^1.26.2"
+numpy = "^2.0"
 
 
 [tool.poetry.group.dev.dependencies]

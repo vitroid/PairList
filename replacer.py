@@ -10,7 +10,7 @@ def prefix(L, pre):
 
 d = toml.load("pyproject.toml")
 d |= {
-    "benchmark_py": "".join(open("benchmark/benchmark.py").readlines()),
+    # "benchmark_py": "".join(open("benchmark/benchmark.py").readlines()),
     # "version": setup.get_version(),
     # "package": setup.get_name(),
     # "url": setup.get_url(),

@@ -28,11 +28,11 @@ test1: CRN1x222.gro
 
 # https://qiita.com/yukinarit/items/0996180032c077443efb
 # https://zenn.dev/atu4403/articles/python-githubpages
-doc: README.md # CITATION.cff 
+doc: README.md ./pairlist.py # CITATION.cff 
 	pdoc -o docs ./pairlist.py --docformat google
 
 
-%: temp_% replacer.py pairlist.py benchmark/benchmark.py
+%: temp_% replacer.py pairlist.py benchmark.ipynb pyproject.toml
 	python3 replacer.py < $< > $@
 
 
