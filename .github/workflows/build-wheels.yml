@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate README.md from template
+        shell: bash
         run: python replacer.py < temp_README.md > README.md
 
       - name: Set up Python
@@ -56,6 +57,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate README.md from template
+        shell: bash
         run: python replacer.py < temp_README.md > README.md
 
       - name: Set up Python
