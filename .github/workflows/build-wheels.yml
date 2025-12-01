@@ -32,10 +32,12 @@ jobs:
 
       - name: Build wheels
         env:
-          CIBW_BUILD_VERBOSITY: 2
+          CIBW_BUILD_VERBOSITY: 3
           CIBW_BEFORE_BUILD: "pip install numpy poetry-core setuptools wheel build"
           CIBW_TEST_COMMAND: "python -c 'import pairlist; from cpairlist import pairs, pairs2'"
           CIBW_TEST_REQUIRES: "numpy"
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+          CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux_* pp* *-cp36 *-cp37 *-cp38"
         run: python -m cibuildwheel --output-dir wheelhouse
 
       - name: Upload wheels
