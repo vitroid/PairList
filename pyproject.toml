@@ -8,7 +8,7 @@ readme = "README.md"
 include = [{path = "csource/"}]
 
 [tool.poetry.build]
-script = "build.py"
+script = "setup_build.py"
 generate-setup-file = true
 
 [tool.poetry.dependencies]
@@ -29,3 +29,10 @@ matplotlib = "^3.8.3"
 [build-system]
 requires = ["poetry-core", "setuptools", "numpy"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.cibuildwheel]
+# サポートするPythonバージョン
+test-command = "python -c 'import pairlist; from cpairlist import pairs, pairs2'"
+test-requires = ["numpy"]
+# Windows、macOS、Linux用のwheelをビルド
+build-verbosity = 1

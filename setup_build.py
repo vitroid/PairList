@@ -6,8 +6,16 @@ from distutils.errors import (
     DistutilsExecError,
     DistutilsPlatformError,
 )
+import sys
+import platform
 
 import numpy as np
+
+# Windows (MSVC) では -std=c99 フラグは不要（サポートされていない）
+# Unix系（GCC/Clang）では -std=c99 を追加
+compile_args = []
+if platform.system() != "Windows":
+    compile_args.append("-std=c99")
 
 ext_modules = [
     Extension(
@@ -16,9 +24,7 @@ ext_modules = [
             np.get_include(),
         ],
         sources=["csource/cpairlist.c", "csource/pairlist.c"],
-        extra_compile_args=[
-            "-std=c99",
-        ],
+        extra_compile_args=compile_args,
     ),
 ]
 
