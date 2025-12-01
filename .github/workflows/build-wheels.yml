@@ -22,14 +22,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate README.md from template
-        shell: bash
-        run: python replacer.py < temp_README.md > README.md
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
+
+      - name: Install README generator dependencies
+        run: python -m pip install jinja2 toml
+
+      - name: Generate README.md from template
+        shell: bash
+        run: python replacer.py < temp_README.md > README.md
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
@@ -56,14 +59,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate README.md from template
-        shell: bash
-        run: python replacer.py < temp_README.md > README.md
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
+
+      - name: Install README generator dependencies
+        run: python -m pip install jinja2 toml
+
+      - name: Generate README.md from template
+        shell: bash
+        run: python replacer.py < temp_README.md > README.md
 
       - name: Install build dependencies
         run: python -m pip install build poetry-core
