@@ -32,7 +32,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.cibuildwheel]
 # サポートするPythonバージョン
-test-command = "python -c 'import pairlist; from cpairlist import pairs, pairs2'"
+test-command = "python -c \"import pairlist; from cpairlist import pairs, pairs2\""
 test-requires = ["numpy"]
 # Windows、macOS、Linux用のwheelをビルド
 build-verbosity = 1
