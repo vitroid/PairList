@@ -22,6 +22,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Generate README.md from template
+        run: python replacer.py < temp_README.md > README.md
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -51,6 +54,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Generate README.md from template
+        run: python replacer.py < temp_README.md > README.md
 
       - name: Set up Python
         uses: actions/setup-python@v5

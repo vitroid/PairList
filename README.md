@@ -3,7 +3,7 @@
 Generates the pair list of atoms that are closer to each other than the
 given threshold under the periodic boundary conditions.
 
-version 0.6
+version 0.6.1
 
 ## Usage
 
