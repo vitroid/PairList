@@ -9,7 +9,13 @@ import math
 import itertools as it
 import numpy as np
 from logging import getLogger
-from cpairlist import pairs, pairs2
+
+try:
+    from cpairlist import pairs, pairs2
+except ImportError:
+    print("No cpairlist module found. Using pure Python implementation.")
+    pairs = None
+    pairs2 = None
 from typing import Generator
 
 __all__ = ["pairs_iter"]
@@ -66,6 +72,12 @@ def pairs_py(xyz, GX, GY, GZ):
 def pairs2_py(xyz, xyz2, GX, GY, GZ):
     grid = np.array([GX, GY, GZ])
     return _pairs_hetero(xyz, xyz2, grid)
+
+
+if pairs is None:
+    pairs = pairs_py
+if pairs2 is None:
+    pairs2 = pairs2_py
 
 
 def _pairs_hetero(xyz, xyz2, grid):

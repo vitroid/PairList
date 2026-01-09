@@ -1,7 +1,6 @@
 from setuptools.command.build_ext import build_ext
 from setuptools import Extension
 from distutils.errors import (
-    DistutilsPlatformError,
     CCompilerError,
     DistutilsExecError,
     DistutilsPlatformError,
@@ -38,13 +37,31 @@ class ExtBuilder(build_ext):
         try:
             build_ext.run(self)
         except (DistutilsPlatformError, FileNotFoundError):
-            raise BuildFailed("File not found. Could not compile C extension.")
+            self.warn_and_continue()
 
     def build_extension(self, ext):
         try:
             build_ext.build_extension(self, ext)
-        except (CCompilerError, DistutilsExecError, DistutilsPlatformError, ValueError):
-            raise BuildFailed("Could not compile C extension.")
+        except (
+            CCompilerError,
+            DistutilsExecError,
+            DistutilsPlatformError,
+            ValueError,
+        ):
+            self.warn_and_continue()
+
+    def warn_and_continue(self):
+        print("\n" + "=" * 80)
+        print("WARNING: C extension could not be compiled.")
+        print(
+            "This is often because Python development headers are missing (e.g. 'Python.h')."
+        )
+        print("\nTo fix this, you might need to install the python-dev package:")
+        print("- On Ubuntu/Debian: sudo apt-get install python3-dev")
+        print("- On RHEL/CentOS: sudo yum install python3-devel")
+        print("- On macOS: xcode-select --install")
+        print("\nInstallation will proceed using a pure Python fallback.")
+        print("=" * 80 + "\n")
 
 
 def build(setup_kwargs):
