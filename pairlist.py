@@ -13,7 +13,7 @@ from logging import getLogger
 try:
     from cpairlist import pairs, pairs2
 except ImportError:
-    print("No cpairlist module found. Using pure Python implementation.")
+    getLogger().info("No cpairlist module found. Using pure Python implementation.")
     pairs = None
     pairs2 = None
 from typing import Generator
@@ -417,6 +417,7 @@ def determine_grid(cell, radius):
 
 
 def main():
+    logger = getLogger()
     xyz = []
     for x in range(2):
         for y in range(2):
@@ -436,7 +437,7 @@ def main():
     box = np.diag((4, 4, 4))
     rc = 1.000000001
     for i, j, l in pairs_fine_hetero(xyz, xyz2, rc, box):
-        print(i, j, l)
+        logger.debug("%s %s %s", i, j, l)
 
 
 if __name__ == "__main__":

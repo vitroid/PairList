@@ -54,12 +54,15 @@ class ExtBuilder(build_ext):
         print("\n" + "=" * 80)
         print("WARNING: C extension could not be compiled.")
         print(
-            "This is often because Python development headers are missing (e.g. 'Python.h')."
+            "This is often because Python development headers or a C compiler are missing."
         )
-        print("\nTo fix this, you might need to install the python-dev package:")
-        print("- On Ubuntu/Debian: sudo apt-get install python3-dev")
-        print("- On RHEL/CentOS: sudo yum install python3-devel")
+        print("\nTo fix this, you might need to install the appropriate tools:")
+        print("- On Ubuntu/Debian: sudo apt-get install python3-dev build-essential")
+        print("- On RHEL/CentOS: sudo yum install python3-devel Development Tools")
         print("- On macOS: xcode-select --install")
+        print(
+            "- On Windows: Install 'Visual Studio C++ Build Tools' (https://visualstudio.microsoft.com/visual-cpp-build-tools/)"
+        )
         print("\nInstallation will proceed using a pure Python fallback.")
         print("=" * 80 + "\n")
 
