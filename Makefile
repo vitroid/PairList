@@ -4,8 +4,19 @@ ALL=$(OBJ)
 PKGNAME=pairlist
 GENICE=genice2
 
+# Standalone C library for use from Nim, Julia, C++, etc.
+CSOURCE=csource
+LIBPAIRLIST=libpairlist.a
+
 all: $(OBJ) README.md
 	echo Done.
+
+# Build static C library (libpairlist.a)
+lib: $(LIBPAIRLIST)
+$(LIBPAIRLIST): $(CSOURCE)/pairlist.o
+	$(AR) rcs $@ $^
+$(CSOURCE)/pairlist.o: $(CSOURCE)/pairlist.c $(CSOURCE)/pairlist.h
+	$(CC) -c $(CFLAGS) -std=c99 -I$(CSOURCE) -o $@ $<
 
 # Section: test
 
@@ -63,6 +74,7 @@ pep8:
 
 clean:
 	-rm $(ALL) *.so *~ */*~ *.o *.gro *.rdf
+	-rm -f $(LIBPAIRLIST) $(CSOURCE)/pairlist.o
 	-rm -rf build dist
 	-rm -rf PairList.egg-info
 	-rm setup.py # Generated automatically by Poetry

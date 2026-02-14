@@ -16,7 +16,7 @@ except ImportError:
     getLogger().info("No cpairlist module found. Using pure Python implementation.")
     pairs = None
     pairs2 = None
-from typing import Generator
+from typing import Callable, Generator, Iterator, Optional, Tuple, Union
 
 __all__ = ["pairs_iter"]
 
@@ -264,7 +264,37 @@ def pairs_iter(
 
 
 # fully numpy style
-def pairs_fine(xyz, rc, cell, grid=None, distance=True, raw=False, engine=pairs):
+def pairs_fine(
+    xyz: np.ndarray,
+    rc: float,
+    cell: np.ndarray,
+    grid: Optional[np.ndarray] = None,
+    distance: bool = True,
+    raw: bool = False,
+    engine: Callable[..., np.ndarray] = pairs,
+) -> Union[
+    Tuple[np.ndarray, np.ndarray],
+    Tuple[np.ndarray, np.ndarray, np.ndarray],
+    np.ndarray,
+    Iterator[Tuple[int, int, float]],
+]:
+    """Pairs within rc under PBC. Fractional coords, triclinic cell.
+
+    Args:
+        xyz: Fractional positions (n, 3).
+        rc: Cutoff distance.
+        cell: Cell matrix (3, 3), rows = a, b, c.
+        grid: Optional (GX, GY, GZ). Computed from cell/rc if None.
+        distance: Include distance in output.
+        raw: If True, return (j0, j1) or (j0, j1, Ls); else column_stack or zip.
+        engine: pairs or pairs_py.
+
+    Returns:
+        raw=True, distance=False: (j0, j1)
+        raw=True, distance=True:  (j0, j1, Ls)
+        raw=False, distance=False: (n, 2) array
+        raw=False, distance=True:  zip(j0, j1, Ls)
+    """
     logger = getLogger()
     if grid is None:
         grid = determine_grid(cell, rc)

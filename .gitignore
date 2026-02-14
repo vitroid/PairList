@@ -37,3 +37,6 @@ dist/
 .vscode/targets.log
 Pipfile.lock
 poetry.lock
+nimcache
+*.a
+
