@@ -11,11 +11,13 @@ import numpy as np
 from logging import getLogger
 
 try:
-    from cpairlist import pairs, pairs2
+    from cpairlist import pairs, pairs2, pairs_filtered, pairs2_filtered
 except ImportError:
     getLogger().info("No cpairlist module found. Using pure Python implementation.")
     pairs = None
     pairs2 = None
+    pairs_filtered = None
+    pairs2_filtered = None
 from typing import Callable, Generator, Iterator, Optional, Tuple, Union
 
 __all__ = ["pairs_iter"]
@@ -66,6 +68,8 @@ def pairs_py(xyz, GX, GY, GZ):
                         for a in members:
                             for b in residents[a2]:
                                 pairs.append((a, b))
+    if len(pairs) == 0:
+        return np.zeros((0, 2), dtype=int)
     return np.array(pairs)
 
 
@@ -103,6 +107,8 @@ def _pairs_hetero(xyz, xyz2, grid):
                     for a in members:
                         for b in residents2[a2]:
                             pairs.append((a, b))
+    if len(pairs) == 0:
+        return np.zeros((0, 2), dtype=int)
     return np.array(pairs)
 
 
@@ -287,7 +293,7 @@ def pairs_fine(
         grid: Optional (GX, GY, GZ). Computed from cell/rc if None.
         distance: Include distance in output.
         raw: If True, return (j0, j1) or (j0, j1, Ls); else column_stack or zip.
-        engine: pairs or pairs_py.
+        engine: pairs or pairs_py. Default C path filters in C (pairs_filtered).
 
     Returns:
         raw=True, distance=False: (j0, j1)
@@ -298,11 +304,23 @@ def pairs_fine(
     logger = getLogger()
     if grid is None:
         grid = determine_grid(cell, rc)
+
+    # Default C engine: filter inside C (exact-size allocation).
+    if engine is pairs and pairs_filtered is not None:
+        gx, gy, gz = (int(grid[0]), int(grid[1]), int(grid[2]))
+        if distance:
+            p, Ls = pairs_filtered(xyz, gx, gy, gz, cell, float(rc), 1)
+            j0, j1 = p[:, 0], p[:, 1]
+            if raw:
+                return j0, j1, Ls
+            return zip(j0, j1, Ls)
+        p = pairs_filtered(xyz, gx, gy, gz, cell, float(rc), 0)
+        if raw:
+            return p[:, 0], p[:, 1]
+        return p
+
     p = engine(xyz, *grid)
     idx0 = p[:, 0]
-    # for i in range(idx0.shape[0]):
-    #    if idx0[i] > 1000:
-    #        print(i,idx0[i])
     idx1 = p[:, 1]
     p0 = xyz[idx0]
     p1 = xyz[idx1]
@@ -376,6 +394,20 @@ def pairs_fine_hetero(
     logger = getLogger()
     if grid is None:
         grid = determine_grid(cell, rc)
+
+    if engine is pairs2 and pairs2_filtered is not None:
+        gx, gy, gz = (int(grid[0]), int(grid[1]), int(grid[2]))
+        if distance:
+            p, Ls = pairs2_filtered(xyz, xyz2, gx, gy, gz, cell, float(rc), 1)
+            j0, j1 = p[:, 0], p[:, 1]
+            if raw:
+                return j0, j1, Ls
+            return zip(j0, j1, Ls)
+        p = pairs2_filtered(xyz, xyz2, gx, gy, gz, cell, float(rc), 0)
+        if raw:
+            return p[:, 0], p[:, 1]
+        return p
+
     p = engine(xyz, xyz2, *grid)
     idx0 = p[:, 0]
     idx1 = p[:, 1]

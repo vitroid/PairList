@@ -7,12 +7,18 @@
 
 static PyObject *pairs(PyObject *self, PyObject *args);
 static PyObject *pairs2(PyObject *self, PyObject *args);
+static PyObject *pairs_filtered(PyObject *self, PyObject *args);
+static PyObject *pairs2_filtered(PyObject *self, PyObject *args);
 
 static PyMethodDef module_methods[] = {
   {"pairs", pairs, METH_VARARGS,
-   "Rough neighbor list from given fractional coordinates of the particles and a grid."},
+   "Rough neighbor list from fractional coordinates and a grid."},
   {"pairs2", pairs2, METH_VARARGS,
-   "Rough neighbor list from given two fractional coordinates of the different particles and a grid."},
+   "Rough hetero neighbor list from fractional coordinates and a grid."},
+  {"pairs_filtered", pairs_filtered, METH_VARARGS,
+   "Neighbor pairs within rc (triclinic). Args: rpos, gx,gy,gz, cell(3,3), rc[, distance=0]."},
+  {"pairs2_filtered", pairs2_filtered, METH_VARARGS,
+   "Hetero neighbor pairs within rc (triclinic). Args: rpos0, rpos1, gx,gy,gz, cell, rc[, distance=0]."},
   {NULL, NULL, 0, NULL}};
 
 static struct PyModuleDef moduledef = {
@@ -65,6 +71,22 @@ static PyArrayObject *as_rpos_array(PyObject *obj, const char *name) {
 }
 
 
+static PyArrayObject *as_cell_array(PyObject *obj) {
+  PyObject *arr = PyArray_FROM_OTF(obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+  if (arr == NULL) {
+    return NULL;
+  }
+  if (PyArray_NDIM((PyArrayObject *)arr) != 2 ||
+      PyArray_DIM((PyArrayObject *)arr, 0) != 3 ||
+      PyArray_DIM((PyArrayObject *)arr, 1) != 3) {
+    PyErr_SetString(PyExc_ValueError, "cell must have shape (3, 3)");
+    Py_DECREF(arr);
+    return NULL;
+  }
+  return (PyArrayObject *)arr;
+}
+
+
 /* ngrid[d] must be >= 1 (matches pairlist.determine_grid). */
 static int check_ngrid(const int ngrid[3]) {
   for (int d = 0; d < 3; d++) {
@@ -91,6 +113,22 @@ static PyObject *pairs_to_ndarray(int npairs, int *pairs_data) {
   PyObject *narray = PyArray_SimpleNewFromData(2, dims, NPY_INT, pairs_data);
   if (narray == NULL) {
     free(pairs_data);
+    return NULL;
+  }
+  PyArray_ENABLEFLAGS((PyArrayObject *)narray, NPY_ARRAY_OWNDATA);
+  return narray;
+}
+
+
+static PyObject *dists_to_ndarray(int npairs, double *dists_data) {
+  npy_intp dims[1] = {npairs};
+  if (npairs == 0) {
+    return PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+  }
+  PyObject *narray =
+      PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, dists_data);
+  if (narray == NULL) {
+    free(dists_data);
     return NULL;
   }
   PyArray_ENABLEFLAGS((PyArrayObject *)narray, NPY_ARRAY_OWNDATA);
@@ -197,4 +235,159 @@ static PyObject *pairs2(PyObject *self, PyObject *args) {
     return NULL;
   }
   return pairs_to_ndarray(npairs, pairs_buf);
+}
+
+
+static PyObject *pairs_filtered(PyObject *self, PyObject *args) {
+  PyObject *rpos_obj, *cell_obj;
+  int ngrid[3];
+  double rc;
+  int want_dist = 0;
+
+  if (!PyArg_ParseTuple(args, "OiiiOd|i", &rpos_obj, &ngrid[0], &ngrid[1],
+                        &ngrid[2], &cell_obj, &rc, &want_dist)) {
+    return NULL;
+  }
+  if (check_ngrid(ngrid) < 0) {
+    return NULL;
+  }
+  long long ngrid_prod =
+      (long long)ngrid[0] * (long long)ngrid[1] * (long long)ngrid[2];
+  if (ngrid_prod > INT_MAX) {
+    PyErr_SetString(PyExc_ValueError, "ngrid product is too large");
+    return NULL;
+  }
+
+  PyArrayObject *rpos = as_rpos_array(rpos_obj, "rpos");
+  if (rpos == NULL) {
+    return NULL;
+  }
+  PyArrayObject *cell = as_cell_array(cell_obj);
+  if (cell == NULL) {
+    Py_DECREF(rpos);
+    return NULL;
+  }
+  npy_intp n_atoms = PyArray_DIM(rpos, 0);
+  if (n_atoms > INT_MAX) {
+    Py_DECREF(rpos);
+    Py_DECREF(cell);
+    PyErr_SetString(PyExc_ValueError, "too many atoms for cpairlist");
+    return NULL;
+  }
+
+  int n = (int)n_atoms;
+  double *a = (double *)PyArray_DATA(rpos);
+  double *c = (double *)PyArray_DATA(cell);
+  int *pairs_buf = NULL;
+  double *dists_buf = NULL;
+  int npairs;
+  Py_BEGIN_ALLOW_THREADS
+  npairs = PairsFiltered(n, a, ngrid, c, rc, &pairs_buf,
+                         want_dist ? &dists_buf : NULL);
+  Py_END_ALLOW_THREADS
+  Py_DECREF(rpos);
+  Py_DECREF(cell);
+  if (npairs < 0) {
+    PyErr_SetString(PyExc_MemoryError,
+                    "failed to allocate filtered pair list");
+    return NULL;
+  }
+
+  PyObject *parr = pairs_to_ndarray(npairs, pairs_buf);
+  if (parr == NULL) {
+    free(dists_buf);
+    return NULL;
+  }
+  if (!want_dist) {
+    return parr;
+  }
+  PyObject *darr = dists_to_ndarray(npairs, dists_buf);
+  if (darr == NULL) {
+    Py_DECREF(parr);
+    return NULL;
+  }
+  return Py_BuildValue("NN", parr, darr);
+}
+
+
+static PyObject *pairs2_filtered(PyObject *self, PyObject *args) {
+  PyObject *rpos0_obj, *rpos1_obj, *cell_obj;
+  int ngrid[3];
+  double rc;
+  int want_dist = 0;
+
+  if (!PyArg_ParseTuple(args, "OOiiiOd|i", &rpos0_obj, &rpos1_obj, &ngrid[0],
+                        &ngrid[1], &ngrid[2], &cell_obj, &rc, &want_dist)) {
+    return NULL;
+  }
+  if (check_ngrid(ngrid) < 0) {
+    return NULL;
+  }
+  long long ngrid_prod =
+      (long long)ngrid[0] * (long long)ngrid[1] * (long long)ngrid[2];
+  if (ngrid_prod > INT_MAX) {
+    PyErr_SetString(PyExc_ValueError, "ngrid product is too large");
+    return NULL;
+  }
+
+  PyArrayObject *rpos0 = as_rpos_array(rpos0_obj, "rpos0");
+  if (rpos0 == NULL) {
+    return NULL;
+  }
+  PyArrayObject *rpos1 = as_rpos_array(rpos1_obj, "rpos1");
+  if (rpos1 == NULL) {
+    Py_DECREF(rpos0);
+    return NULL;
+  }
+  PyArrayObject *cell = as_cell_array(cell_obj);
+  if (cell == NULL) {
+    Py_DECREF(rpos0);
+    Py_DECREF(rpos1);
+    return NULL;
+  }
+  npy_intp n0_atoms = PyArray_DIM(rpos0, 0);
+  npy_intp n1_atoms = PyArray_DIM(rpos1, 0);
+  if (n0_atoms > INT_MAX || n1_atoms > INT_MAX) {
+    Py_DECREF(rpos0);
+    Py_DECREF(rpos1);
+    Py_DECREF(cell);
+    PyErr_SetString(PyExc_ValueError, "too many atoms for cpairlist");
+    return NULL;
+  }
+
+  int n0 = (int)n0_atoms;
+  int n1 = (int)n1_atoms;
+  double *a0 = (double *)PyArray_DATA(rpos0);
+  double *a1 = (double *)PyArray_DATA(rpos1);
+  double *c = (double *)PyArray_DATA(cell);
+  int *pairs_buf = NULL;
+  double *dists_buf = NULL;
+  int npairs;
+  Py_BEGIN_ALLOW_THREADS
+  npairs = Pairs2Filtered(n0, a0, n1, a1, ngrid, c, rc, &pairs_buf,
+                          want_dist ? &dists_buf : NULL);
+  Py_END_ALLOW_THREADS
+  Py_DECREF(rpos0);
+  Py_DECREF(rpos1);
+  Py_DECREF(cell);
+  if (npairs < 0) {
+    PyErr_SetString(PyExc_MemoryError,
+                    "failed to allocate filtered pair list");
+    return NULL;
+  }
+
+  PyObject *parr = pairs_to_ndarray(npairs, pairs_buf);
+  if (parr == NULL) {
+    free(dists_buf);
+    return NULL;
+  }
+  if (!want_dist) {
+    return parr;
+  }
+  PyObject *darr = dists_to_ndarray(npairs, dists_buf);
+  if (darr == NULL) {
+    Py_DECREF(parr);
+    return NULL;
+  }
+  return Py_BuildValue("NN", parr, darr);
 }

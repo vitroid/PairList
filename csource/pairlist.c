@@ -444,6 +444,262 @@ fail:
 
 
 
+/* Minimum-image squared distance for fractional coords + triclinic cell
+   (rows a,b,c in cell[9] row-major). Matches np.dot(d, cell) then ||.||^2. */
+static inline PL_FLOAT frac_minimage_dist2(const PL_FLOAT *ri, const PL_FLOAT *rj,
+                                           const PL_FLOAT cell[9])
+{
+  PL_FLOAT dx = ri[0] - rj[0];
+  PL_FLOAT dy = ri[1] - rj[1];
+  PL_FLOAT dz = ri[2] - rj[2];
+  dx -= floor(dx + 0.5);
+  dy -= floor(dy + 0.5);
+  dz -= floor(dz + 0.5);
+  PL_FLOAT rx = dx * cell[0] + dy * cell[3] + dz * cell[6];
+  PL_FLOAT ry = dx * cell[1] + dy * cell[4] + dz * cell[7];
+  PL_FLOAT rz = dx * cell[2] + dy * cell[5] + dz * cell[8];
+  return rx * rx + ry * ry + rz * rz;
+}
+
+
+int
+PairsFiltered(int npos, PL_FLOAT *rpos, int ngrid[3], const PL_FLOAT cell[9],
+              PL_FLOAT rc, int **pairs, PL_FLOAT **dists)
+{
+  ResidentList rl = {0};
+  int *gridPairs = NULL;
+  *pairs = NULL;
+  if (dists) {
+    *dists = NULL;
+  }
+  if (rc < 0.0) {
+    return -1;
+  }
+  const PL_FLOAT rc2 = rc * rc;
+
+  if (check_ngrid(ngrid) < 0) {
+    return -1;
+  }
+  int nTotalGrids;
+  if (compute_n_total_grids(ngrid, &nTotalGrids) < 0) {
+    return -1;
+  }
+  if (resident_list_build(npos, rpos, ngrid, nTotalGrids, &rl) < 0) {
+    return -1;
+  }
+
+  int nGridPairs = gridpairlist(ngrid, 1, &gridPairs);
+  if (nGridPairs < 0) {
+    goto fail;
+  }
+
+  /* Pass 1: count pairs with dist < rc */
+  int nPairs = 0;
+  for (int i = 0; i < nGridPairs; i++) {
+    int g0 = gridPairs[i * 2 + 0];
+    int g1 = gridPairs[i * 2 + 1];
+    for (int j = 0; j < rl.nResidents[g0]; j++) {
+      int r0 = rl.residents[rl.heads[g0] + j];
+      for (int k = 0; k < rl.nResidents[g1]; k++) {
+        int r1 = rl.residents[rl.heads[g1] + k];
+        if (frac_minimage_dist2(rpos + r0 * 3, rpos + r1 * 3, cell) < rc2) {
+          nPairs++;
+        }
+      }
+    }
+  }
+  for (int g = 0; g < nTotalGrids; g++) {
+    for (int j = 0; j < rl.nResidents[g]; j++) {
+      int r0 = rl.residents[rl.heads[g] + j];
+      for (int k = j + 1; k < rl.nResidents[g]; k++) {
+        int r1 = rl.residents[rl.heads[g] + k];
+        if (frac_minimage_dist2(rpos + r0 * 3, rpos + r1 * 3, cell) < rc2) {
+          nPairs++;
+        }
+      }
+    }
+  }
+
+  *pairs = malloc_int_array((size_t)nPairs * 2u);
+  if (nPairs > 0 && *pairs == NULL) {
+    goto fail;
+  }
+  if (dists) {
+    if (nPairs == 0) {
+      *dists = NULL;
+    } else {
+      *dists = (PL_FLOAT *)malloc(sizeof(PL_FLOAT) * (size_t)nPairs);
+      if (*dists == NULL) {
+        goto fail;
+      }
+    }
+  }
+
+  /* Pass 2: write */
+  int store = 0;
+  for (int i = 0; i < nGridPairs; i++) {
+    int g0 = gridPairs[i * 2 + 0];
+    int g1 = gridPairs[i * 2 + 1];
+    for (int j = 0; j < rl.nResidents[g0]; j++) {
+      int r0 = rl.residents[rl.heads[g0] + j];
+      for (int k = 0; k < rl.nResidents[g1]; k++) {
+        int r1 = rl.residents[rl.heads[g1] + k];
+        PL_FLOAT d2 = frac_minimage_dist2(rpos + r0 * 3, rpos + r1 * 3, cell);
+        if (d2 < rc2) {
+          (*pairs)[store * 2 + 0] = r0;
+          (*pairs)[store * 2 + 1] = r1;
+          if (dists) {
+            (*dists)[store] = sqrt(d2);
+          }
+          store++;
+        }
+      }
+    }
+  }
+  for (int g = 0; g < nTotalGrids; g++) {
+    for (int j = 0; j < rl.nResidents[g]; j++) {
+      int r0 = rl.residents[rl.heads[g] + j];
+      for (int k = j + 1; k < rl.nResidents[g]; k++) {
+        int r1 = rl.residents[rl.heads[g] + k];
+        PL_FLOAT d2 = frac_minimage_dist2(rpos + r0 * 3, rpos + r1 * 3, cell);
+        if (d2 < rc2) {
+          (*pairs)[store * 2 + 0] = r0;
+          (*pairs)[store * 2 + 1] = r1;
+          if (dists) {
+            (*dists)[store] = sqrt(d2);
+          }
+          store++;
+        }
+      }
+    }
+  }
+
+  free(gridPairs);
+  resident_list_clear(&rl);
+  return store;
+
+fail:
+  free(gridPairs);
+  resident_list_clear(&rl);
+  free(*pairs);
+  *pairs = NULL;
+  if (dists) {
+    free(*dists);
+    *dists = NULL;
+  }
+  return -1;
+}
+
+
+int
+Pairs2Filtered(int npos0, PL_FLOAT *rpos0, int npos1, PL_FLOAT *rpos1,
+               int ngrid[3], const PL_FLOAT cell[9], PL_FLOAT rc,
+               int **pairs, PL_FLOAT **dists)
+{
+  ResidentList rl0 = {0};
+  ResidentList rl1 = {0};
+  int *gridPairs = NULL;
+  *pairs = NULL;
+  if (dists) {
+    *dists = NULL;
+  }
+  if (rc < 0.0) {
+    return -1;
+  }
+  const PL_FLOAT rc2 = rc * rc;
+
+  if (check_ngrid(ngrid) < 0) {
+    return -1;
+  }
+  int nTotalGrids;
+  if (compute_n_total_grids(ngrid, &nTotalGrids) < 0) {
+    return -1;
+  }
+  if (resident_list_build(npos0, rpos0, ngrid, nTotalGrids, &rl0) < 0) {
+    return -1;
+  }
+  if (resident_list_build(npos1, rpos1, ngrid, nTotalGrids, &rl1) < 0) {
+    resident_list_clear(&rl0);
+    return -1;
+  }
+
+  int nGridPairs = gridpairlist(ngrid, 0, &gridPairs);
+  if (nGridPairs < 0) {
+    goto fail;
+  }
+
+  int nPairs = 0;
+  for (int i = 0; i < nGridPairs; i++) {
+    int g0 = gridPairs[i * 2 + 0];
+    int g1 = gridPairs[i * 2 + 1];
+    for (int j = 0; j < rl0.nResidents[g0]; j++) {
+      int r0 = rl0.residents[rl0.heads[g0] + j];
+      for (int k = 0; k < rl1.nResidents[g1]; k++) {
+        int r1 = rl1.residents[rl1.heads[g1] + k];
+        if (frac_minimage_dist2(rpos0 + r0 * 3, rpos1 + r1 * 3, cell) < rc2) {
+          nPairs++;
+        }
+      }
+    }
+  }
+
+  *pairs = malloc_int_array((size_t)nPairs * 2u);
+  if (nPairs > 0 && *pairs == NULL) {
+    goto fail;
+  }
+  if (dists) {
+    if (nPairs == 0) {
+      *dists = NULL;
+    } else {
+      *dists = (PL_FLOAT *)malloc(sizeof(PL_FLOAT) * (size_t)nPairs);
+      if (*dists == NULL) {
+        goto fail;
+      }
+    }
+  }
+
+  int store = 0;
+  for (int i = 0; i < nGridPairs; i++) {
+    int g0 = gridPairs[i * 2 + 0];
+    int g1 = gridPairs[i * 2 + 1];
+    for (int j = 0; j < rl0.nResidents[g0]; j++) {
+      int r0 = rl0.residents[rl0.heads[g0] + j];
+      for (int k = 0; k < rl1.nResidents[g1]; k++) {
+        int r1 = rl1.residents[rl1.heads[g1] + k];
+        PL_FLOAT d2 = frac_minimage_dist2(rpos0 + r0 * 3, rpos1 + r1 * 3, cell);
+        if (d2 < rc2) {
+          (*pairs)[store * 2 + 0] = r0;
+          (*pairs)[store * 2 + 1] = r1;
+          if (dists) {
+            (*dists)[store] = sqrt(d2);
+          }
+          store++;
+        }
+      }
+    }
+  }
+
+  free(gridPairs);
+  resident_list_clear(&rl0);
+  resident_list_clear(&rl1);
+  return store;
+
+fail:
+  free(gridPairs);
+  resident_list_clear(&rl0);
+  resident_list_clear(&rl1);
+  free(*pairs);
+  *pairs = NULL;
+  if (dists) {
+    free(*dists);
+    *dists = NULL;
+  }
+  return -1;
+}
+
+
+
+
 static int
 pairlist1(int nAtoms, PL_FLOAT *atoms, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 /* 

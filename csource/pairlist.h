@@ -8,5 +8,13 @@ int pairlist(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FL
 int Pairs(int npos, PL_FLOAT* rpos, int ngrid[3], int **pairs);
 int Pairs2(int npos0, PL_FLOAT *rpos0, int npos1, PL_FLOAT *rpos1, int ngrid[3], int **pairs);
 
+/* Cell-list + distance filter (triclinic). cell is 3x3 row-major (a,b,c as rows).
+   If dists != NULL, *dists is filled with pair distances (malloc'd).
+   Two-pass: counts then allocates exact size (no rough-list peak). */
+int PairsFiltered(int npos, PL_FLOAT *rpos, int ngrid[3], const PL_FLOAT cell[9],
+                  PL_FLOAT rc, int **pairs, PL_FLOAT **dists);
+int Pairs2Filtered(int npos0, PL_FLOAT *rpos0, int npos1, PL_FLOAT *rpos1,
+                   int ngrid[3], const PL_FLOAT cell[9], PL_FLOAT rc,
+                   int **pairs, PL_FLOAT **dists);
 
 #endif
