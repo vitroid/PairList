@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "pairlist"
-version = "0.6.4"
-description = "Generate neighbor list for the particles in a periodic boundary cell."
+version = "1.0.0"
+description = "Fast neighbor (pair) lists for particles under periodic boundary conditions."
 authors = ["vitroid <vitroid@gmail.com>"]
 license = "MIT"
 readme = "README.md"
