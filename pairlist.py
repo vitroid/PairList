@@ -11,16 +11,32 @@ import numpy as np
 from logging import getLogger
 
 try:
-    from cpairlist import pairs, pairs2, pairs_filtered, pairs2_filtered
+    from cpairlist import (
+        pairs,
+        pairs2,
+        pairs_filtered,
+        pairs2_filtered,
+        filtered_iter_new,
+        filtered2_iter_new,
+        filtered_iter_next,
+        filtered_iter_close,
+    )
 except ImportError:
     getLogger().info("No cpairlist module found. Using pure Python implementation.")
     pairs = None
     pairs2 = None
     pairs_filtered = None
     pairs2_filtered = None
+    filtered_iter_new = None
+    filtered2_iter_new = None
+    filtered_iter_next = None
+    filtered_iter_close = None
 from typing import Callable, Generator, Iterator, Optional, Tuple, Union
 
 __all__ = ["pairs_iter"]
+
+# Chunk size for streaming pair iteration (memory vs call overhead).
+_PAIR_CHUNK_SIZE = 8192
 
 
 def Address(pos, grid):
@@ -270,6 +286,38 @@ def pairs_iter(
 
 
 # fully numpy style
+def _pairs_fine_stream(xyz, grid, cell, rc, chunk_size=_PAIR_CHUNK_SIZE):
+    """Yield (i, j, dist) using C chunk iterator (no full pair array)."""
+    gx, gy, gz = (int(grid[0]), int(grid[1]), int(grid[2]))
+    it = filtered_iter_new(xyz, gx, gy, gz, cell, float(rc))
+    try:
+        while True:
+            chunk = filtered_iter_next(it, chunk_size, 1)
+            if chunk is None:
+                break
+            p, Ls = chunk
+            for i in range(p.shape[0]):
+                yield int(p[i, 0]), int(p[i, 1]), float(Ls[i])
+    finally:
+        filtered_iter_close(it)
+
+
+def _pairs_fine_hetero_stream(xyz, xyz2, grid, cell, rc, chunk_size=_PAIR_CHUNK_SIZE):
+    """Yield (i, j, dist) for hetero pairs using C chunk iterator."""
+    gx, gy, gz = (int(grid[0]), int(grid[1]), int(grid[2]))
+    it = filtered2_iter_new(xyz, xyz2, gx, gy, gz, cell, float(rc))
+    try:
+        while True:
+            chunk = filtered_iter_next(it, chunk_size, 1)
+            if chunk is None:
+                break
+            p, Ls = chunk
+            for i in range(p.shape[0]):
+                yield int(p[i, 0]), int(p[i, 1]), float(Ls[i])
+    finally:
+        filtered_iter_close(it)
+
+
 def pairs_fine(
     xyz: np.ndarray,
     rc: float,
@@ -299,15 +347,19 @@ def pairs_fine(
         raw=True, distance=False: (j0, j1)
         raw=True, distance=True:  (j0, j1, Ls)
         raw=False, distance=False: (n, 2) array
-        raw=False, distance=True:  zip(j0, j1, Ls)
+        raw=False, distance=True:  iterator of (i, j, L) — streamed in chunks
     """
     logger = getLogger()
     if grid is None:
         grid = determine_grid(cell, rc)
 
-    # Default C engine: filter inside C (exact-size allocation).
+    # Default C engine
     if engine is pairs and pairs_filtered is not None:
         gx, gy, gz = (int(grid[0]), int(grid[1]), int(grid[2]))
+        # Streaming path: no full pair array in Python
+        if distance and not raw and filtered_iter_new is not None:
+            return _pairs_fine_stream(xyz, grid, cell, rc)
+        # Array path (raw=True or distance=False)
         if distance:
             p, Ls = pairs_filtered(xyz, gx, gy, gz, cell, float(rc), 1)
             j0, j1 = p[:, 0], p[:, 1]
@@ -397,6 +449,8 @@ def pairs_fine_hetero(
 
     if engine is pairs2 and pairs2_filtered is not None:
         gx, gy, gz = (int(grid[0]), int(grid[1]), int(grid[2]))
+        if distance and not raw and filtered2_iter_new is not None:
+            return _pairs_fine_hetero_stream(xyz, xyz2, grid, cell, rc)
         if distance:
             p, Ls = pairs2_filtered(xyz, xyz2, gx, gy, gz, cell, float(rc), 1)
             j0, j1 = p[:, 0], p[:, 1]

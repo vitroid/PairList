@@ -700,6 +700,247 @@ fail:
 
 
 
+struct PairChunkIter {
+  int hetero;
+  ResidentList rl0;
+  ResidentList rl1;
+  int *gridPairs;
+  int nGridPairs;
+  int nTotalGrids;
+  PL_FLOAT cell[9];
+  PL_FLOAT rc2;
+  PL_FLOAT *rpos0;
+  PL_FLOAT *rpos1;
+  int phase; /* 0: grid pairs, 1: same-cell (homo), 2: done */
+  int gi;
+  int j;
+  int k;
+};
+
+static PairChunkIter *pair_chunk_iter_alloc(void)
+{
+  PairChunkIter *it = (PairChunkIter *)calloc(1, sizeof(PairChunkIter));
+  return it;
+}
+
+PairChunkIter *PairChunkIter_create(int npos, PL_FLOAT *rpos, int ngrid[3],
+                                    const PL_FLOAT cell[9], PL_FLOAT rc)
+{
+  if (rc < 0.0 || check_ngrid(ngrid) < 0) {
+    return NULL;
+  }
+  PairChunkIter *it = pair_chunk_iter_alloc();
+  if (it == NULL) {
+    return NULL;
+  }
+  it->hetero = 0;
+  it->rpos0 = rpos;
+  it->rpos1 = NULL;
+  it->rc2 = rc * rc;
+  for (int i = 0; i < 9; i++) {
+    it->cell[i] = cell[i];
+  }
+  if (compute_n_total_grids(ngrid, &it->nTotalGrids) < 0) {
+    free(it);
+    return NULL;
+  }
+  if (resident_list_build(npos, rpos, ngrid, it->nTotalGrids, &it->rl0) < 0) {
+    free(it);
+    return NULL;
+  }
+  it->nGridPairs = gridpairlist(ngrid, 1, &it->gridPairs);
+  if (it->nGridPairs < 0) {
+    resident_list_clear(&it->rl0);
+    free(it);
+    return NULL;
+  }
+  it->phase = 0;
+  it->gi = 0;
+  it->j = 0;
+  it->k = 0;
+  return it;
+}
+
+PairChunkIter *PairChunkIter_create2(int npos0, PL_FLOAT *rpos0, int npos1,
+                                     PL_FLOAT *rpos1, int ngrid[3],
+                                     const PL_FLOAT cell[9], PL_FLOAT rc)
+{
+  if (rc < 0.0 || check_ngrid(ngrid) < 0) {
+    return NULL;
+  }
+  PairChunkIter *it = pair_chunk_iter_alloc();
+  if (it == NULL) {
+    return NULL;
+  }
+  it->hetero = 1;
+  it->rpos0 = rpos0;
+  it->rpos1 = rpos1;
+  it->rc2 = rc * rc;
+  for (int i = 0; i < 9; i++) {
+    it->cell[i] = cell[i];
+  }
+  if (compute_n_total_grids(ngrid, &it->nTotalGrids) < 0) {
+    free(it);
+    return NULL;
+  }
+  if (resident_list_build(npos0, rpos0, ngrid, it->nTotalGrids, &it->rl0) < 0) {
+    free(it);
+    return NULL;
+  }
+  if (resident_list_build(npos1, rpos1, ngrid, it->nTotalGrids, &it->rl1) < 0) {
+    resident_list_clear(&it->rl0);
+    free(it);
+    return NULL;
+  }
+  it->nGridPairs = gridpairlist(ngrid, 0, &it->gridPairs);
+  if (it->nGridPairs < 0) {
+    resident_list_clear(&it->rl0);
+    resident_list_clear(&it->rl1);
+    free(it);
+    return NULL;
+  }
+  it->phase = 0;
+  it->gi = 0;
+  it->j = 0;
+  it->k = 0;
+  return it;
+}
+
+void PairChunkIter_free(PairChunkIter *it)
+{
+  if (it == NULL) {
+    return;
+  }
+  free(it->gridPairs);
+  resident_list_clear(&it->rl0);
+  resident_list_clear(&it->rl1);
+  free(it);
+}
+
+int PairChunkIter_next(PairChunkIter *it, int capacity, int *pairs_out,
+                       PL_FLOAT *dists_out)
+{
+  if (it == NULL || capacity < 1 || pairs_out == NULL) {
+    return -1;
+  }
+  int n = 0;
+
+  if (!it->hetero) {
+    /* phase 0: neighboring grid pairs */
+    while (it->phase == 0 && n < capacity) {
+      if (it->gi >= it->nGridPairs) {
+        it->phase = 1;
+        it->gi = 0;
+        it->j = 0;
+        it->k = 0;
+        break;
+      }
+      int g0 = it->gridPairs[it->gi * 2 + 0];
+      int g1 = it->gridPairs[it->gi * 2 + 1];
+      int n0 = it->rl0.nResidents[g0];
+      int n1 = it->rl0.nResidents[g1];
+      if (it->j >= n0) {
+        it->gi++;
+        it->j = 0;
+        it->k = 0;
+        continue;
+      }
+      if (it->k >= n1) {
+        it->j++;
+        it->k = 0;
+        continue;
+      }
+      int r0 = it->rl0.residents[it->rl0.heads[g0] + it->j];
+      int r1 = it->rl0.residents[it->rl0.heads[g1] + it->k];
+      it->k++;
+      PL_FLOAT d2 =
+          frac_minimage_dist2(it->rpos0 + r0 * 3, it->rpos0 + r1 * 3, it->cell);
+      if (d2 < it->rc2) {
+        pairs_out[n * 2 + 0] = r0;
+        pairs_out[n * 2 + 1] = r1;
+        if (dists_out) {
+          dists_out[n] = sqrt(d2);
+        }
+        n++;
+      }
+    }
+    /* phase 1: same-cell pairs */
+    while (it->phase == 1 && n < capacity) {
+      if (it->gi >= it->nTotalGrids) {
+        it->phase = 2;
+        break;
+      }
+      int nr = it->rl0.nResidents[it->gi];
+      if (it->j >= nr) {
+        it->gi++;
+        it->j = 0;
+        it->k = 0;
+        continue;
+      }
+      if (it->k == 0) {
+        it->k = it->j + 1;
+      }
+      if (it->k >= nr) {
+        it->j++;
+        it->k = 0;
+        continue;
+      }
+      int r0 = it->rl0.residents[it->rl0.heads[it->gi] + it->j];
+      int r1 = it->rl0.residents[it->rl0.heads[it->gi] + it->k];
+      it->k++;
+      PL_FLOAT d2 =
+          frac_minimage_dist2(it->rpos0 + r0 * 3, it->rpos0 + r1 * 3, it->cell);
+      if (d2 < it->rc2) {
+        pairs_out[n * 2 + 0] = r0;
+        pairs_out[n * 2 + 1] = r1;
+        if (dists_out) {
+          dists_out[n] = sqrt(d2);
+        }
+        n++;
+      }
+    }
+  } else {
+    while (it->phase == 0 && n < capacity) {
+      if (it->gi >= it->nGridPairs) {
+        it->phase = 2;
+        break;
+      }
+      int g0 = it->gridPairs[it->gi * 2 + 0];
+      int g1 = it->gridPairs[it->gi * 2 + 1];
+      int n0 = it->rl0.nResidents[g0];
+      int n1 = it->rl1.nResidents[g1];
+      if (it->j >= n0) {
+        it->gi++;
+        it->j = 0;
+        it->k = 0;
+        continue;
+      }
+      if (it->k >= n1) {
+        it->j++;
+        it->k = 0;
+        continue;
+      }
+      int r0 = it->rl0.residents[it->rl0.heads[g0] + it->j];
+      int r1 = it->rl1.residents[it->rl1.heads[g1] + it->k];
+      it->k++;
+      PL_FLOAT d2 =
+          frac_minimage_dist2(it->rpos0 + r0 * 3, it->rpos1 + r1 * 3, it->cell);
+      if (d2 < it->rc2) {
+        pairs_out[n * 2 + 0] = r0;
+        pairs_out[n * 2 + 1] = r1;
+        if (dists_out) {
+          dists_out[n] = sqrt(d2);
+        }
+        n++;
+      }
+    }
+  }
+
+  return n; /* 0 means exhausted (phase==2) or no pairs left in this call */
+}
+
+
+
 static int
 pairlist1(int nAtoms, PL_FLOAT *atoms, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 /* 

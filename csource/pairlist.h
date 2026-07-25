@@ -17,4 +17,18 @@ int Pairs2Filtered(int npos0, PL_FLOAT *rpos0, int npos1, PL_FLOAT *rpos1,
                    int ngrid[3], const PL_FLOAT cell[9], PL_FLOAT rc,
                    int **pairs, PL_FLOAT **dists);
 
+/* Streaming chunk iterator: O(N) resident state, O(chunk) output buffers.
+   rpos pointers must remain valid until PairChunkIter_free. */
+typedef struct PairChunkIter PairChunkIter;
+PairChunkIter *PairChunkIter_create(int npos, PL_FLOAT *rpos, int ngrid[3],
+                                    const PL_FLOAT cell[9], PL_FLOAT rc);
+PairChunkIter *PairChunkIter_create2(int npos0, PL_FLOAT *rpos0, int npos1,
+                                     PL_FLOAT *rpos1, int ngrid[3],
+                                     const PL_FLOAT cell[9], PL_FLOAT rc);
+/* Fill up to capacity pairs into pairs_out[capacity*2], optional dists_out[capacity].
+   Returns number written (>=1), 0 if exhausted, -1 on error. */
+int PairChunkIter_next(PairChunkIter *it, int capacity, int *pairs_out,
+                       PL_FLOAT *dists_out);
+void PairChunkIter_free(PairChunkIter *it);
+
 #endif
