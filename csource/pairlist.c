@@ -25,18 +25,12 @@ static int check_ngrid(const int ngrid[3])
 }
 
 /* Map a fractional coordinate to a grid index in [0, ngrid_d - 1].
-   After x -= floor(x), finite x is in [0, 1). The clamp is for the case
-   where x * ngrid_d rounds up to ngrid_d in floating-point arithmetic. */
+   For finite x, x-=floor(x) yields [0,1); under IEEE-754, floor(x*ngrid_d)
+   is then always in [0, ngrid_d-1], so no clamp is required. */
 static inline int frac_to_grid(PL_FLOAT x, int ngrid_d)
 {
   x -= floor(x);
-  int g = (int)floor(x * (PL_FLOAT)ngrid_d);
-  if (g < 0) {
-    g = 0;
-  } else if (g >= ngrid_d) {
-    g = ngrid_d - 1;
-  }
-  return g;
+  return (int)floor(x * (PL_FLOAT)ngrid_d);
 }
 
 /* Neighbor offset range along one axis of size G.

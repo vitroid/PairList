@@ -35,8 +35,8 @@ def test_pairs2_ngrid_one_no_duplicate():
     assert result.shape == (1, 2)
 
 
-def test_pairs_clamps_product_rounding_to_ngrid():
-    # x in [0,1) but x*ngrid may round to ngrid → must clamp, not OOB
+def test_pairs_edge_fractional_coord():
+    # largest float < 1 must still bin without error (no clamp needed under IEEE-754)
     x = np.nextafter(1.0, 0.0)
     rpos = np.array([[x, x, x], [0.0, 0.0, 0.0]], dtype=np.float64)
     result = pairs(rpos, 8, 8, 8)
