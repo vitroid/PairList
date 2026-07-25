@@ -8,8 +8,9 @@
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
-//#include "C_arraytest.h"
+#include <limits.h>
 #include <math.h>
+#include <stdlib.h>
 #include "pairlist.h"
 
 static PyObject *pairs(PyObject *self, PyObject* args);
@@ -90,6 +91,25 @@ static int check_ngrid(const int ngrid[3]) {
 }
 
 
+/* Convert a malloc'd pair buffer into a numpy array.
+   npairs==0 with pairs_data==NULL → empty (0,2) array.
+   On failure after taking ownership path, frees pairs_data. */
+static PyObject *pairs_to_ndarray(int npairs, int *pairs_data) {
+  npy_intp dims[2] = {npairs, 2};
+  if (npairs == 0) {
+    /* do not pass NULL to SimpleNewFromData */
+    return PyArray_SimpleNew(2, dims, NPY_INT);
+  }
+  PyObject *narray = PyArray_SimpleNewFromData(2, dims, NPY_INT, pairs_data);
+  if (narray == NULL) {
+    free(pairs_data);
+    return NULL;
+  }
+  PyArray_ENABLEFLAGS((PyArrayObject *)narray, NPY_ARRAY_OWNDATA);
+  return narray;
+}
+
+
 static PyObject *pairs(PyObject *self, PyObject *args) {
   PyObject *rpos_obj;
   int ngrid[3];
@@ -101,29 +121,35 @@ static PyObject *pairs(PyObject *self, PyObject *args) {
   if (check_ngrid(ngrid) < 0) {
     return NULL;
   }
+  long long ngrid_prod =
+      (long long)ngrid[0] * (long long)ngrid[1] * (long long)ngrid[2];
+  if (ngrid_prod > INT_MAX) {
+    PyErr_SetString(PyExc_ValueError, "ngrid product is too large");
+    return NULL;
+  }
 
   PyArrayObject *rpos = as_rpos_array(rpos_obj, "rpos");
   if (rpos == NULL) {
     return NULL;
   }
-
-  int n = (int)PyArray_DIM(rpos, 0);
-  double *a = (double *)PyArray_DATA(rpos);
-  int *pairs;
-  int npairs = Pairs(n, a, ngrid, &pairs);
-  if (npairs < 0) {
+  npy_intp n_atoms = PyArray_DIM(rpos, 0);
+  if (n_atoms > INT_MAX) {
     Py_DECREF(rpos);
-    PyErr_SetString(PyExc_RuntimeError, "Pairs failed");
+    PyErr_SetString(PyExc_ValueError, "too many atoms for cpairlist");
     return NULL;
   }
 
-  /* return the array as a numpy array (numpy will free it later) */
-  npy_intp output_dims[2] = {npairs, 2};
-  PyObject *narray = PyArray_SimpleNewFromData(2, output_dims, NPY_INT, pairs);
-  /* this is the critical line - tell numpy it has to free the data */
-  PyArray_ENABLEFLAGS((PyArrayObject *)narray, NPY_ARRAY_OWNDATA);
+  int n = (int)n_atoms;
+  double *a = (double *)PyArray_DATA(rpos);
+  int *pairs_buf;
+  int npairs = Pairs(n, a, ngrid, &pairs_buf);
   Py_DECREF(rpos);
-  return narray;
+  if (npairs < 0) {
+    PyErr_SetString(PyExc_MemoryError,
+                    "failed to allocate neighbor pair list");
+    return NULL;
+  }
+  return pairs_to_ndarray(npairs, pairs_buf);
 }
 
 
@@ -138,6 +164,12 @@ static PyObject *pairs2(PyObject *self, PyObject *args) {
   if (check_ngrid(ngrid) < 0) {
     return NULL;
   }
+  long long ngrid_prod =
+      (long long)ngrid[0] * (long long)ngrid[1] * (long long)ngrid[2];
+  if (ngrid_prod > INT_MAX) {
+    PyErr_SetString(PyExc_ValueError, "ngrid product is too large");
+    return NULL;
+  }
 
   PyArrayObject *rpos0 = as_rpos_array(rpos0_obj, "rpos0");
   if (rpos0 == NULL) {
@@ -148,26 +180,27 @@ static PyObject *pairs2(PyObject *self, PyObject *args) {
     Py_DECREF(rpos0);
     return NULL;
   }
-
-  int n0 = (int)PyArray_DIM(rpos0, 0);
-  int n1 = (int)PyArray_DIM(rpos1, 0);
-  double *a0 = (double *)PyArray_DATA(rpos0);
-  double *a1 = (double *)PyArray_DATA(rpos1);
-  int *pairs;
-  int npairs = Pairs2(n0, a0, n1, a1, ngrid, &pairs);
-  if (npairs < 0) {
+  npy_intp n0_atoms = PyArray_DIM(rpos0, 0);
+  npy_intp n1_atoms = PyArray_DIM(rpos1, 0);
+  if (n0_atoms > INT_MAX || n1_atoms > INT_MAX) {
     Py_DECREF(rpos0);
     Py_DECREF(rpos1);
-    PyErr_SetString(PyExc_RuntimeError, "Pairs2 failed");
+    PyErr_SetString(PyExc_ValueError, "too many atoms for cpairlist");
     return NULL;
   }
 
-  /* return the array as a numpy array (numpy will free it later) */
-  npy_intp output_dims[2] = {npairs, 2};
-  PyObject *narray = PyArray_SimpleNewFromData(2, output_dims, NPY_INT, pairs);
-  /* this is the critical line - tell numpy it has to free the data */
-  PyArray_ENABLEFLAGS((PyArrayObject *)narray, NPY_ARRAY_OWNDATA);
+  int n0 = (int)n0_atoms;
+  int n1 = (int)n1_atoms;
+  double *a0 = (double *)PyArray_DATA(rpos0);
+  double *a1 = (double *)PyArray_DATA(rpos1);
+  int *pairs_buf;
+  int npairs = Pairs2(n0, a0, n1, a1, ngrid, &pairs_buf);
   Py_DECREF(rpos0);
   Py_DECREF(rpos1);
-  return narray;
+  if (npairs < 0) {
+    PyErr_SetString(PyExc_MemoryError,
+                    "failed to allocate neighbor pair list");
+    return NULL;
+  }
+  return pairs_to_ndarray(npairs, pairs_buf);
 }
