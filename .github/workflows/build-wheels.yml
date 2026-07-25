@@ -40,8 +40,9 @@ jobs:
       - name: Build wheels
         env:
           CIBW_BUILD_VERBOSITY: 3
-          # Prefer binary numpy wheels; manylinux_2_17's GCC is too old to build NumPy >= 2.5 from source.
-          CIBW_BEFORE_BUILD: "pip install 'numpy>=2.0,<2.5' poetry-core setuptools wheel build"
+          # Pin a NumPy with binary wheels everywhere; avoid source builds on old manylinux GCC.
+          # Use an exact pin (no commas/quotes) so Windows cmd parsing stays reliable.
+          CIBW_BEFORE_BUILD: pip install numpy==2.2.6 poetry-core setuptools wheel build
           CIBW_TEST_COMMAND: "python -c \"import pairlist; from cpairlist import pairs, pairs2\""
           CIBW_TEST_REQUIRES: "numpy"
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
