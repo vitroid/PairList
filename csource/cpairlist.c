@@ -46,119 +46,98 @@ PyMODINIT_FUNC PyInit_cpairlist(void) {
 }
 
 
-
-//taken from C_arraytest.c in Scipy.
-
-/* ==== Check that PyArrayObject is a double (Float) type and a matrix ==============
-    return 1 if an error and raise exception */
-int  not_doublematrix(PyArrayObject *mat)  {
-	if (PyArray_TYPE(mat) != NPY_DOUBLE || PyArray_NDIM(mat) != 2)  {
-		PyErr_SetString(PyExc_ValueError,
-			"Array must be of type double and 2 dimensional (n x m).");
-		return 1;  }
-	return 0;
-}
-/* ==== Allocate a double *vector (vec of pointers) ======================
-    Memory is Allocated!  See void free_Carray(double ** )                  */
-double **ptrvector(long n)  {
-	double **v;
-	v=(double **)malloc((size_t) (n*sizeof(double)));
-	if (!v)   {
-		printf("In **ptrvector. Allocation of memory for double array failed.");
-		exit(0);  }
-	return v;
-}
-
-
-/* ==== Create Carray from PyArray ======================
-    Assumes PyArray is contiguous in memory.
-    Memory is allocated!                                    */
-double **pymatrix_to_Carrayptrs(PyArrayObject *arrayin)  {
-	double **c, *a;
-	int i,n,m;
-	npy_intp* dims;
-
-	dims = PyArray_DIMS(arrayin);
-	n = (int)dims[0];
-	m = (int)dims[1];
-	c=ptrvector(n);
-	a = (double *)PyArray_DATA(arrayin);  // pointer to arrayin data as double
-	for ( i=0; i<n; i++)  {
-		c[i]=a+i*m;  }
-	return c;
+/* Convert obj to a C-contiguous float64 array of shape (N, 3).
+   On success, returns a new reference (caller must Py_DECREF).
+   On failure, sets a Python exception and returns NULL. */
+static PyArrayObject *as_rpos_array(PyObject *obj, const char *name) {
+  /* NPY_ARRAY_IN_ARRAY: C-contiguous + aligned (read-only OK).
+     NPY_DOUBLE: cast to float64 when needed. */
+  PyObject *arr = PyArray_FROM_OTF(obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+  if (arr == NULL) {
+    return NULL;
+  }
+  if (PyArray_NDIM((PyArrayObject *)arr) != 2) {
+    PyErr_Format(PyExc_ValueError,
+                 "%s must be a 2-dimensional array of shape (N, 3), "
+                 "got ndim=%d",
+                 name, PyArray_NDIM((PyArrayObject *)arr));
+    Py_DECREF(arr);
+    return NULL;
+  }
+  if (PyArray_DIM((PyArrayObject *)arr, 1) != 3) {
+    PyErr_Format(PyExc_ValueError,
+                 "%s must have shape (N, 3), got shape (%" NPY_INTP_FMT
+                 ", %" NPY_INTP_FMT ")",
+                 name, PyArray_DIM((PyArrayObject *)arr, 0),
+                 PyArray_DIM((PyArrayObject *)arr, 1));
+    Py_DECREF(arr);
+    return NULL;
+  }
+  return (PyArrayObject *)arr;
 }
 
 
-/* ==== Free a double *vector (vec of pointers) ========================== */
-void free_Carrayptrs(double **v)  {
-	free((char*) v);
-}
+static PyObject *pairs(PyObject *self, PyObject *args) {
+  PyObject *rpos_obj;
+  int ngrid[3];
 
+  if (!PyArg_ParseTuple(args, "Oiii", &rpos_obj, &ngrid[0], &ngrid[1],
+                        &ngrid[2])) {
+    return NULL;
+  }
 
+  PyArrayObject *rpos = as_rpos_array(rpos_obj, "rpos");
+  if (rpos == NULL) {
+    return NULL;
+  }
 
-static PyObject *pairs(PyObject *self, PyObject* args) {
-  // expect two arguments.
-  PyArrayObject *rpos;
-  int dimss[2], ngrid[3];
-
-  /* Parse tuples separately since args will differ between C fcns */
-  if (!PyArg_ParseTuple(args, "O!iii", &PyArray_Type,
-			&rpos, &ngrid[0], &ngrid[1], &ngrid[2])) return NULL;
-  //if (!PyArg_ParseTuple(args, "I", &n, &m, &ngrid[0], &ngrid[1], &ngrid[2])) return NULL;
-  if (NULL == rpos) return NULL;
-  if (not_doublematrix(rpos)) return NULL;
-
-  /* Get the dimensions of the input */
-  npy_intp* input_dims = PyArray_DIMS(rpos);
-  int n = (int)input_dims[0];
-  //int m = (int)input_dims[1];
-
-  double* a = (double*)PyArray_DATA(rpos);
-  int* pairs;
+  int n = (int)PyArray_DIM(rpos, 0);
+  double *a = (double *)PyArray_DATA(rpos);
+  int *pairs;
   int npairs = Pairs(n, a, ngrid, &pairs);
-  //pairs is allocated.
 
-  // return the array as a numpy array (numpy will free it later)
-  npy_intp output_dims[2] = {npairs,2};
+  /* return the array as a numpy array (numpy will free it later) */
+  npy_intp output_dims[2] = {npairs, 2};
   PyObject *narray = PyArray_SimpleNewFromData(2, output_dims, NPY_INT, pairs);
-  // this is the critical line - tell numpy it has to free the data
-  PyArray_ENABLEFLAGS((PyArrayObject*)narray, NPY_ARRAY_OWNDATA);
+  /* this is the critical line - tell numpy it has to free the data */
+  PyArray_ENABLEFLAGS((PyArrayObject *)narray, NPY_ARRAY_OWNDATA);
+  Py_DECREF(rpos);
   return narray;
 }
 
 
-
-static PyObject *pairs2(PyObject *self, PyObject* args) {
-  // expect two arguments.
-  PyArrayObject *rpos0, *rpos1;
+static PyObject *pairs2(PyObject *self, PyObject *args) {
+  PyObject *rpos0_obj, *rpos1_obj;
   int ngrid[3];
 
-  /* Parse tuples separately since args will differ between C fcns */
-  if (!PyArg_ParseTuple(args, "O!O!iii", &PyArray_Type, &rpos0,
-			&PyArray_Type, &rpos1, &ngrid[0], &ngrid[1], &ngrid[2])) return NULL;
-  if (NULL == rpos0) return NULL;
-  if (NULL == rpos1) return NULL;
-  if (not_doublematrix(rpos0)) return NULL;
-  if (not_doublematrix(rpos1)) return NULL;
+  if (!PyArg_ParseTuple(args, "OOiii", &rpos0_obj, &rpos1_obj, &ngrid[0],
+                        &ngrid[1], &ngrid[2])) {
+    return NULL;
+  }
 
-  /* Get the dimensions of the input */
-  npy_intp* dims0 = PyArray_DIMS(rpos0);
-  npy_intp* dims1 = PyArray_DIMS(rpos1);
-  int n0 = (int)dims0[0];
-  //int m0 = (int)dims0[1];
-  int n1 = (int)dims1[0];
-  //int m1 = (int)dims1[1];
+  PyArrayObject *rpos0 = as_rpos_array(rpos0_obj, "rpos0");
+  if (rpos0 == NULL) {
+    return NULL;
+  }
+  PyArrayObject *rpos1 = as_rpos_array(rpos1_obj, "rpos1");
+  if (rpos1 == NULL) {
+    Py_DECREF(rpos0);
+    return NULL;
+  }
 
-  double* a0 = (double*)PyArray_DATA(rpos0);
-  double* a1 = (double*)PyArray_DATA(rpos1);
-  int* pairs;
+  int n0 = (int)PyArray_DIM(rpos0, 0);
+  int n1 = (int)PyArray_DIM(rpos1, 0);
+  double *a0 = (double *)PyArray_DATA(rpos0);
+  double *a1 = (double *)PyArray_DATA(rpos1);
+  int *pairs;
   int npairs = Pairs2(n0, a0, n1, a1, ngrid, &pairs);
-  //pairs is allocated.
 
-  // return the array as a numpy array (numpy will free it later)
-  npy_intp output_dims[2] = {npairs,2};
+  /* return the array as a numpy array (numpy will free it later) */
+  npy_intp output_dims[2] = {npairs, 2};
   PyObject *narray = PyArray_SimpleNewFromData(2, output_dims, NPY_INT, pairs);
-  // this is the critical line - tell numpy it has to free the data
-  PyArray_ENABLEFLAGS((PyArrayObject*)narray, NPY_ARRAY_OWNDATA);
+  /* this is the critical line - tell numpy it has to free the data */
+  PyArray_ENABLEFLAGS((PyArrayObject *)narray, NPY_ARRAY_OWNDATA);
+  Py_DECREF(rpos0);
+  Py_DECREF(rpos1);
   return narray;
 }
