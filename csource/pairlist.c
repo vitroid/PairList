@@ -13,6 +13,41 @@
 int pairlist1(int nAtoms, PL_FLOAT *atoms, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs);
 int pairlist2(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs);
 
+/* Return 0 if ngrid[d] >= 1 for all d, else -1. */
+static int check_ngrid(const int ngrid[3])
+{
+  for (int d = 0; d < 3; d++) {
+    if (ngrid[d] < 1) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+/* Map a fractional coordinate to a grid index in [0, ngrid_d - 1]. */
+static inline int frac_to_grid(PL_FLOAT x, int ngrid_d)
+{
+  x -= floor(x);
+  if (x >= 1.0) {
+    x = 0.0; /* wrap exact 1.0 → 0 */
+  }
+  int g = (int)floor(x * (PL_FLOAT)ngrid_d);
+  if (g < 0) {
+    g = 0;
+  } else if (g >= ngrid_d) {
+    g = ngrid_d - 1;
+  }
+  return g;
+}
+
+/* Neighbor offset range along one axis of size G.
+   G==1: {0}; G==2: {0,+1} (avoids -1≡+1 alias); G>=3: {-1,0,+1}. */
+static inline void neighbor_range(int G, int i, int *k0, int *k1)
+{
+  *k0 = (G < 3) ? i : i - 1;
+  *k1 = (G < 2) ? i : i + 1;
+}
+
 int
 pairlist(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 {
@@ -37,13 +72,14 @@ returns:
     pairs: newly allocated list of grid pairs
 */
 {
+  if (check_ngrid(ngrid) < 0) {
+    *pairs = NULL;
+    return -1;
+  }
   const int GX = ngrid[0];
   const int GY = ngrid[1];
   const int GZ = ngrid[2];
   const int nTotalGrids = GX*GY*GZ;
-  //assert ( GX > 2 );
-  //assert ( GY > 2 );
-  //assert ( GZ > 2 );
   int npair = 0;
   int neighborcells = 27;
   if ( single ) neighborcells = 14;
@@ -53,22 +89,20 @@ returns:
     for(int iy=0;iy<GY;iy++){
       for(int iz=0;iz<GZ;iz++){
         int a = ADDRESS(ix,iy,iz); //center
-	//for all 26 neighbor cells
-        int kx0 = (GX==2) ? ix : ix - 1;
-        for(int kx=kx0;kx<=ix+1;kx++){
+        int kx0, kx1, ky0, ky1, kz0, kz1;
+        neighbor_range(GX, ix, &kx0, &kx1);
+        for(int kx=kx0;kx<=kx1;kx++){
           int jx = (kx+GX) % GX;
-          int ky0 = (GY==2) ? iy : iy - 1;
-          for(int ky=ky0;ky<=iy+1;ky++){
+          neighbor_range(GY, iy, &ky0, &ky1);
+          for(int ky=ky0;ky<=ky1;ky++){
             int jy = (ky+GY) % GY;
-            int kz0 = (GZ==2) ? iz : iz - 1;
-            for(int kz=kz0;kz<=iz+1;kz++){
+            neighbor_range(GZ, iz, &kz0, &kz1);
+            for(int kz=kz0;kz<=kz1;kz++){
               int jz = (kz+GZ) % GZ;
               int b = ADDRESS(jx,jy,jz);
               if ( ( ! single ) || ( a<b ) ){
                 (*pairs)[npair*2+0] = a;
                 (*pairs)[npair*2+1] = b;
-		//if(a==b)
-		//  fprintf(stderr,"%d SAME\n", a);
                 npair ++;
               }
             }
@@ -97,6 +131,10 @@ returns:
     pairs: newly allocated list of pairs (length is approximate)
 */
   int test = 0;
+  if (check_ngrid(ngrid) < 0) {
+    *pairs = NULL;
+    return -1;
+  }
   const int GX = ngrid[0];
   const int GY = ngrid[1];
   const int GZ = ngrid[2];
@@ -112,9 +150,7 @@ returns:
   for(int i=0;i<npos;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      PL_FLOAT x = rpos[i*3+d];
-      x -= floor(x);
-      grid[d] = floor(x * ngrid[d]);
+      grid[d] = frac_to_grid(rpos[i*3+d], ngrid[d]);
     }
     nResidents[ADDRESS(grid[0],grid[1],grid[2])] ++;
   }
@@ -138,9 +174,7 @@ returns:
   for(int i=0; i<npos; i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      PL_FLOAT x = rpos[i*3+d];
-      x -= floor(x);
-      grid[d] = floor(x * ngrid[d]);
+      grid[d] = frac_to_grid(rpos[i*3+d], ngrid[d]);
     }
     int a = ADDRESS(grid[0],grid[1],grid[2]);
     residents[pointer[a]] = i;
@@ -244,6 +278,10 @@ returns:
 */
 {
   int test = 0;
+  if (check_ngrid(ngrid) < 0) {
+    *pairs = NULL;
+    return -1;
+  }
   //determine the grid size
   const int GX = ngrid[0];
   const int GY = ngrid[1];
@@ -262,10 +300,7 @@ returns:
   for(int i=0;i<npos0;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      PL_FLOAT x = rpos0[i*3+d];
-      x -= floor(x);
-      x -= floor(x);
-      grid[d] = floor(x * ngrid[d]);
+      grid[d] = frac_to_grid(rpos0[i*3+d], ngrid[d]);
     }
     if(test)
       fprintf(stderr,"%d %d %d\n", grid[0], grid[1], grid[2]);
@@ -274,10 +309,7 @@ returns:
   for(int i=0;i<npos1;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      PL_FLOAT x = rpos1[i*3+d];
-      x -= floor(x); //certify to be in range 0..1
-      x -= floor(x); //certify to be in range 0..1
-      grid[d] = floor(x * ngrid[d]);
+      grid[d] = frac_to_grid(rpos1[i*3+d], ngrid[d]);
     }
     if(test)
       fprintf(stderr,"%d %d %d\n", grid[0], grid[1], grid[2]);
@@ -306,10 +338,7 @@ returns:
   for(int i=0;i<npos0;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      PL_FLOAT x = rpos0[i*3+d];
-      x -= floor(x); //certify to be in range 0..1
-      x -= floor(x); //certify to be in range 0..1
-      grid[d] = floor(x * ngrid[d]);
+      grid[d] = frac_to_grid(rpos0[i*3+d], ngrid[d]);
     }
     int a = ADDRESS(grid[0],grid[1],grid[2]);
     residents0[pointer[a]] = i;
@@ -332,10 +361,7 @@ returns:
   for(int i=0;i<npos1;i++){
     int grid[3];
     for(int d=0;d<3;d++){
-      PL_FLOAT x = rpos1[i*3+d];
-      x -= floor(x); //certify to be in range 0..1
-      x -= floor(x); //certify to be in range 0..1
-      grid[d] = floor(x * ngrid[d]);
+      grid[d] = frac_to_grid(rpos1[i*3+d], ngrid[d]);
     }
     int a = ADDRESS(grid[0],grid[1],grid[2]);
     residents1[pointer[a]] = i;
@@ -429,6 +455,9 @@ returns:
   int ngrid[3];
   for(int d=0;d<3;d++){
     ngrid[d] = (int) floor(cell[d] / higher);
+    if (ngrid[d] < 1) {
+      ngrid[d] = 1;
+    }
   }
   int npairs = Pairs(nAtoms, rpos, ngrid, pairs);
   int store=0;
@@ -488,6 +517,9 @@ returns:
   int ngrid[3];
   for(int d=0;d<3;d++){
     ngrid[d] = (int) floor(cell[d] / higher);
+    if (ngrid[d] < 1) {
+      ngrid[d] = 1;
+    }
   }
   int npairs = Pairs2(nAtoms0, rpos0, nAtoms1, rpos1, ngrid, pairs);
   int store=0;

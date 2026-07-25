@@ -77,12 +77,28 @@ static PyArrayObject *as_rpos_array(PyObject *obj, const char *name) {
 }
 
 
+/* ngrid[d] must be >= 1 (matches pairlist.determine_grid). */
+static int check_ngrid(const int ngrid[3]) {
+  for (int d = 0; d < 3; d++) {
+    if (ngrid[d] < 1) {
+      PyErr_Format(PyExc_ValueError,
+                   "ngrid[%d] must be >= 1, got %d", d, ngrid[d]);
+      return -1;
+    }
+  }
+  return 0;
+}
+
+
 static PyObject *pairs(PyObject *self, PyObject *args) {
   PyObject *rpos_obj;
   int ngrid[3];
 
   if (!PyArg_ParseTuple(args, "Oiii", &rpos_obj, &ngrid[0], &ngrid[1],
                         &ngrid[2])) {
+    return NULL;
+  }
+  if (check_ngrid(ngrid) < 0) {
     return NULL;
   }
 
@@ -95,6 +111,11 @@ static PyObject *pairs(PyObject *self, PyObject *args) {
   double *a = (double *)PyArray_DATA(rpos);
   int *pairs;
   int npairs = Pairs(n, a, ngrid, &pairs);
+  if (npairs < 0) {
+    Py_DECREF(rpos);
+    PyErr_SetString(PyExc_RuntimeError, "Pairs failed");
+    return NULL;
+  }
 
   /* return the array as a numpy array (numpy will free it later) */
   npy_intp output_dims[2] = {npairs, 2};
@@ -114,6 +135,9 @@ static PyObject *pairs2(PyObject *self, PyObject *args) {
                         &ngrid[1], &ngrid[2])) {
     return NULL;
   }
+  if (check_ngrid(ngrid) < 0) {
+    return NULL;
+  }
 
   PyArrayObject *rpos0 = as_rpos_array(rpos0_obj, "rpos0");
   if (rpos0 == NULL) {
@@ -131,6 +155,12 @@ static PyObject *pairs2(PyObject *self, PyObject *args) {
   double *a1 = (double *)PyArray_DATA(rpos1);
   int *pairs;
   int npairs = Pairs2(n0, a0, n1, a1, ngrid, &pairs);
+  if (npairs < 0) {
+    Py_DECREF(rpos0);
+    Py_DECREF(rpos1);
+    PyErr_SetString(PyExc_RuntimeError, "Pairs2 failed");
+    return NULL;
+  }
 
   /* return the array as a numpy array (numpy will free it later) */
   npy_intp output_dims[2] = {npairs, 2};
