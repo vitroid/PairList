@@ -79,6 +79,7 @@ static int check_ngrid(const int ngrid[3]) {
 
 
 /* Convert a malloc'd pair buffer into a numpy array.
+   Pair indices are C int; NPY_INT is the dtype that matches sizeof(int).
    npairs==0 with pairs_data==NULL → empty (0,2) array.
    On failure after taking ownership path, frees pairs_data. */
 static PyObject *pairs_to_ndarray(int npairs, int *pairs_data) {
@@ -128,8 +129,11 @@ static PyObject *pairs(PyObject *self, PyObject *args) {
 
   int n = (int)n_atoms;
   double *a = (double *)PyArray_DATA(rpos);
-  int *pairs_buf;
-  int npairs = Pairs(n, a, ngrid, &pairs_buf);
+  int *pairs_buf = NULL;
+  int npairs;
+  Py_BEGIN_ALLOW_THREADS
+  npairs = Pairs(n, a, ngrid, &pairs_buf);
+  Py_END_ALLOW_THREADS
   Py_DECREF(rpos);
   if (npairs < 0) {
     PyErr_SetString(PyExc_MemoryError,
@@ -180,8 +184,11 @@ static PyObject *pairs2(PyObject *self, PyObject *args) {
   int n1 = (int)n1_atoms;
   double *a0 = (double *)PyArray_DATA(rpos0);
   double *a1 = (double *)PyArray_DATA(rpos1);
-  int *pairs_buf;
-  int npairs = Pairs2(n0, a0, n1, a1, ngrid, &pairs_buf);
+  int *pairs_buf = NULL;
+  int npairs;
+  Py_BEGIN_ALLOW_THREADS
+  npairs = Pairs2(n0, a0, n1, a1, ngrid, &pairs_buf);
+  Py_END_ALLOW_THREADS
   Py_DECREF(rpos0);
   Py_DECREF(rpos1);
   if (npairs < 0) {
