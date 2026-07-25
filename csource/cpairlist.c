@@ -1,20 +1,12 @@
-//http://acooke.org/cute/ExampleCod0.html
-//https://github.com/numpy/numpy/blob/master/numpy/core/src/dummymodule.c
-//https://qiita.com/junkoda/items/17df11d7a20dc9d50e7d
-
-
-
-
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 #include <limits.h>
-#include <math.h>
 #include <stdlib.h>
 #include "pairlist.h"
 
-static PyObject *pairs(PyObject *self, PyObject* args);
-static PyObject *pairs2(PyObject *self, PyObject* args);
+static PyObject *pairs(PyObject *self, PyObject *args);
+static PyObject *pairs2(PyObject *self, PyObject *args);
 
 static PyMethodDef module_methods[] = {
   {"pairs", pairs, METH_VARARGS,
@@ -24,26 +16,21 @@ static PyMethodDef module_methods[] = {
   {NULL, NULL, 0, NULL}};
 
 static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        "cpairlist",
-        NULL,
-        -1,
-        module_methods,
-        NULL,
-        NULL,
-        NULL,
-        NULL
+  PyModuleDef_HEAD_INIT,
+  "cpairlist",
+  NULL,
+  -1,
+  module_methods,
+  NULL,
+  NULL,
+  NULL,
+  NULL
 };
 
-
-//my initializer
 PyMODINIT_FUNC PyInit_cpairlist(void) {
-  PyObject *m;
-  import_array();
-  m = PyModule_Create(&moduledef);
-  if (!m)
-    return NULL;
-  return m;
+  /* import_array1: on failure returns NULL with ImportError set (no PyErr_Print). */
+  import_array1(NULL);
+  return PyModule_Create(&moduledef);
 }
 
 

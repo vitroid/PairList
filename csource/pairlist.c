@@ -1,19 +1,13 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
-#include <assert.h>
 #include <limits.h>
 #include <stdint.h>
 #include "pairlist.h"
 
-// neighborlist.cを使って書きなおそうかとも思ったが、効率が若干悪くなる気がするのでやめる。
-
 #define ADDRESS(x,y,z) (((z)*GY + (y))*GX + (x))
-#define True 1
-#define False 0
-int pairlist1(int nAtoms, PL_FLOAT *atoms, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs);
-int pairlist2(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs);
+
+static int pairlist1(int nAtoms, PL_FLOAT *atoms, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs);
+static int pairlist2(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs);
 
 /* Return 0 if ngrid[d] >= 1 for all d, else -1. */
 static int check_ngrid(const int ngrid[3])
@@ -181,17 +175,15 @@ static void shrink_pair_buffer(int **pairs, int estim, int nPairs)
 int
 pairlist(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 {
-  if ( ( nAtoms1 == 0 ) || (atoms1 == NULL) || ( atoms0 == atoms1) ){
-    if ( atoms0 == atoms1)
-      assert (nAtoms0 == nAtoms1);
+  if ((nAtoms1 == 0) || (atoms1 == NULL) || (atoms0 == atoms1)) {
     return pairlist1(nAtoms0, atoms0, lower, higher, cell, pairs);
   }
   return pairlist2(nAtoms0, atoms0, nAtoms1, atoms1, lower, higher, cell, pairs);
 }
-   
 
 
-int
+
+static int
 gridpairlist(int ngrid[3], int single, int **pairs)
 /* 
 given:
@@ -287,7 +279,7 @@ returns:
     return -1;
   }
 
-  int nGridPairs = gridpairlist(ngrid, True, &gridPairs);
+  int nGridPairs = gridpairlist(ngrid, 1, &gridPairs);
   if (nGridPairs < 0) {
     goto fail;
   }
@@ -397,7 +389,7 @@ returns:
     return -1;
   }
 
-  int nGridPairs = gridpairlist(ngrid, False, &gridPairs);
+  int nGridPairs = gridpairlist(ngrid, 0, &gridPairs);
   if (nGridPairs < 0) {
     goto fail;
   }
@@ -452,7 +444,7 @@ fail:
 
 
 
-int
+static int
 pairlist1(int nAtoms, PL_FLOAT *atoms, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 /* 
 given:
@@ -518,7 +510,7 @@ returns:
 
 
 
-int
+static int
 pairlist2(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 /* 
 given:
