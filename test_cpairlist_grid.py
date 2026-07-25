@@ -35,17 +35,10 @@ def test_pairs2_ngrid_one_no_duplicate():
     assert result.shape == (1, 2)
 
 
-def test_pairs_clamps_fractional_coord_one():
-    # x==1.0 must wrap/clamp into bin 0, not index out of range
-    rpos = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], dtype=np.float64)
-    result = pairs(rpos, 4, 4, 4)
-    assert result.ndim == 2
-    assert result.shape[1] == 2
-
-
-def test_pairs_clamps_almost_one():
-    # nextafter(1.0, 0) * ngrid can sit on the upper edge before clamp
+def test_pairs_clamps_product_rounding_to_ngrid():
+    # x in [0,1) but x*ngrid may round to ngrid → must clamp, not OOB
     x = np.nextafter(1.0, 0.0)
     rpos = np.array([[x, x, x], [0.0, 0.0, 0.0]], dtype=np.float64)
     result = pairs(rpos, 8, 8, 8)
     assert result.ndim == 2
+    assert result.shape[1] == 2

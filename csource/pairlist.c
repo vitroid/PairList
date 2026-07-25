@@ -24,13 +24,12 @@ static int check_ngrid(const int ngrid[3])
   return 0;
 }
 
-/* Map a fractional coordinate to a grid index in [0, ngrid_d - 1]. */
+/* Map a fractional coordinate to a grid index in [0, ngrid_d - 1].
+   After x -= floor(x), finite x is in [0, 1). The clamp is for the case
+   where x * ngrid_d rounds up to ngrid_d in floating-point arithmetic. */
 static inline int frac_to_grid(PL_FLOAT x, int ngrid_d)
 {
   x -= floor(x);
-  if (x >= 1.0) {
-    x = 0.0; /* wrap exact 1.0 → 0 */
-  }
   int g = (int)floor(x * (PL_FLOAT)ngrid_d);
   if (g < 0) {
     g = 0;
