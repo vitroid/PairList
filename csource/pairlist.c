@@ -87,6 +87,97 @@ static inline void neighbor_range(int G, int i, int *k0, int *k1)
   *k1 = (G < 2) ? i : i + 1;
 }
 
+typedef struct {
+  int *nResidents;
+  int *residents;
+  int *heads;
+} ResidentList;
+
+static void resident_list_clear(ResidentList *rl)
+{
+  free(rl->nResidents);
+  free(rl->residents);
+  free(rl->heads);
+  rl->nResidents = NULL;
+  rl->residents = NULL;
+  rl->heads = NULL;
+}
+
+/* Bin atoms into grid cells. On failure leaves *rl cleared and returns -1. */
+static int resident_list_build(int npos, const PL_FLOAT *rpos, const int ngrid[3],
+                               int nTotalGrids, ResidentList *rl)
+{
+  const int GX = ngrid[0];
+  const int GY = ngrid[1];
+  const int GZ = ngrid[2];
+  int *pointer = NULL;
+
+  rl->nResidents = NULL;
+  rl->residents = NULL;
+  rl->heads = NULL;
+
+  rl->nResidents = (int *)calloc((size_t)nTotalGrids, sizeof(int));
+  if (rl->nResidents == NULL) {
+    return -1;
+  }
+  for (int i = 0; i < npos; i++) {
+    int grid[3];
+    for (int d = 0; d < 3; d++) {
+      grid[d] = frac_to_grid(rpos[i * 3 + d], ngrid[d]);
+    }
+    rl->nResidents[ADDRESS(grid[0], grid[1], grid[2])]++;
+  }
+
+  if ((size_t)npos > SIZE_MAX - (size_t)nTotalGrids) {
+    resident_list_clear(rl);
+    return -1;
+  }
+  pointer = (int *)calloc((size_t)nTotalGrids, sizeof(int));
+  rl->residents = (int *)calloc((size_t)npos + (size_t)nTotalGrids, sizeof(int));
+  rl->heads = (int *)calloc((size_t)nTotalGrids, sizeof(int));
+  if (pointer == NULL || rl->residents == NULL || rl->heads == NULL) {
+    free(pointer);
+    resident_list_clear(rl);
+    return -1;
+  }
+
+  int head = 0;
+  for (int g = 0; g < nTotalGrids; g++) {
+    rl->heads[g] = head;
+    pointer[g] = head;
+    head += rl->nResidents[g] + 1;
+    rl->residents[head - 1] = -1;
+  }
+  for (int i = 0; i < npos; i++) {
+    int grid[3];
+    for (int d = 0; d < 3; d++) {
+      grid[d] = frac_to_grid(rpos[i * 3 + d], ngrid[d]);
+    }
+    int a = ADDRESS(grid[0], grid[1], grid[2]);
+    rl->residents[pointer[a]] = i;
+    pointer[a]++;
+  }
+  free(pointer);
+  return 0;
+}
+
+/* Shrink malloc'd pair buffer from estim pairs to nPairs. Keeps buffer if realloc fails. */
+static void shrink_pair_buffer(int **pairs, int estim, int nPairs)
+{
+  if (nPairs == 0) {
+    free(*pairs);
+    *pairs = NULL;
+    return;
+  }
+  if (nPairs >= estim) {
+    return;
+  }
+  int *p = (int *)realloc(*pairs, (size_t)nPairs * 2u * sizeof(int));
+  if (p != NULL) {
+    *pairs = p;
+  }
+}
+
 int
 pairlist(int nAtoms0, PL_FLOAT *atoms0, int nAtoms1, PL_FLOAT *atoms1, PL_FLOAT lower, PL_FLOAT higher, PL_FLOAT cell[3], int **pairs)
 {
@@ -181,60 +272,19 @@ returns:
     return value: number of pairs (>=0), or -1 on error
     pairs: newly allocated list of pairs (NULL if count is 0 or on error)
 */
-  int *nResidents = NULL;
-  int *pointer = NULL;
-  int *residents = NULL;
-  int *heads = NULL;
+  ResidentList rl = {0};
   int *gridPairs = NULL;
   *pairs = NULL;
 
   if (check_ngrid(ngrid) < 0) {
     return -1;
   }
-  const int GX = ngrid[0];
-  const int GY = ngrid[1];
-  const int GZ = ngrid[2];
   int nTotalGrids;
   if (compute_n_total_grids(ngrid, &nTotalGrids) < 0) {
     return -1;
   }
-
-  nResidents = (int *)calloc((size_t)nTotalGrids, sizeof(int));
-  if (nResidents == NULL) {
-    goto fail;
-  }
-  for (int i = 0; i < npos; i++) {
-    int grid[3];
-    for (int d = 0; d < 3; d++) {
-      grid[d] = frac_to_grid(rpos[i * 3 + d], ngrid[d]);
-    }
-    nResidents[ADDRESS(grid[0], grid[1], grid[2])]++;
-  }
-
-  if ((size_t)npos > SIZE_MAX - (size_t)nTotalGrids) {
-    goto fail;
-  }
-  pointer = (int *)calloc((size_t)nTotalGrids, sizeof(int));
-  residents = (int *)calloc((size_t)npos + (size_t)nTotalGrids, sizeof(int));
-  heads = (int *)calloc((size_t)nTotalGrids, sizeof(int));
-  if (pointer == NULL || residents == NULL || heads == NULL) {
-    goto fail;
-  }
-  int head = 0;
-  for (int g = 0; g < nTotalGrids; g++) {
-    heads[g] = head;
-    pointer[g] = head;
-    head += nResidents[g] + 1;
-    residents[head - 1] = -1; /* terminator */
-  }
-  for (int i = 0; i < npos; i++) {
-    int grid[3];
-    for (int d = 0; d < 3; d++) {
-      grid[d] = frac_to_grid(rpos[i * 3 + d], ngrid[d]);
-    }
-    int a = ADDRESS(grid[0], grid[1], grid[2]);
-    residents[pointer[a]] = i;
-    pointer[a]++;
+  if (resident_list_build(npos, rpos, ngrid, nTotalGrids, &rl) < 0) {
+    return -1;
   }
 
   int nGridPairs = gridpairlist(ngrid, True, &gridPairs);
@@ -246,14 +296,13 @@ returns:
   for (int i = 0; i < nGridPairs; i++) {
     int g0 = gridPairs[i * 2 + 0];
     int g1 = gridPairs[i * 2 + 1];
-    if (accum_prod(&estim, nResidents[g0], nResidents[g1]) < 0) {
+    if (accum_prod(&estim, rl.nResidents[g0], rl.nResidents[g1]) < 0) {
       goto fail;
     }
   }
   for (int g = 0; g < nTotalGrids; g++) {
-    int n = nResidents[g];
+    int n = rl.nResidents[g];
     if (n > 1) {
-      /* n*(n-1)/2 without overflowing the addend */
       if (n - 1 > INT_MAX / n) {
         goto fail;
       }
@@ -277,10 +326,10 @@ returns:
   for (int i = 0; i < nGridPairs; i++) {
     int g0 = gridPairs[i * 2 + 0];
     int g1 = gridPairs[i * 2 + 1];
-    for (int j = 0; j < nResidents[g0]; j++) {
-      int r0 = residents[heads[g0] + j];
-      for (int k = 0; k < nResidents[g1]; k++) {
-        int r1 = residents[heads[g1] + k];
+    for (int j = 0; j < rl.nResidents[g0]; j++) {
+      int r0 = rl.residents[rl.heads[g0] + j];
+      for (int k = 0; k < rl.nResidents[g1]; k++) {
+        int r1 = rl.residents[rl.heads[g1] + k];
         (*pairs)[nPairs * 2 + 0] = r0;
         (*pairs)[nPairs * 2 + 1] = r1;
         nPairs++;
@@ -288,10 +337,10 @@ returns:
     }
   }
   for (int g = 0; g < nTotalGrids; g++) {
-    for (int j = 0; j < nResidents[g]; j++) {
-      int r0 = residents[heads[g] + j];
-      for (int k = j + 1; k < nResidents[g]; k++) {
-        int r1 = residents[heads[g] + k];
+    for (int j = 0; j < rl.nResidents[g]; j++) {
+      int r0 = rl.residents[rl.heads[g] + j];
+      for (int k = j + 1; k < rl.nResidents[g]; k++) {
+        int r1 = rl.residents[rl.heads[g] + k];
         (*pairs)[nPairs * 2 + 0] = r0;
         (*pairs)[nPairs * 2 + 1] = r1;
         nPairs++;
@@ -299,19 +348,14 @@ returns:
     }
   }
 
+  shrink_pair_buffer(pairs, estim, nPairs);
   free(gridPairs);
-  free(nResidents);
-  free(pointer);
-  free(residents);
-  free(heads);
+  resident_list_clear(&rl);
   return nPairs;
 
 fail:
   free(gridPairs);
-  free(nResidents);
-  free(pointer);
-  free(residents);
-  free(heads);
+  resident_list_clear(&rl);
   free(*pairs);
   *pairs = NULL;
   return -1;
@@ -333,94 +377,24 @@ returns:
     pairs: newly allocated list of pairs (NULL if count is 0 or on error)
 */
 {
-  int *nResidents0 = NULL;
-  int *nResidents1 = NULL;
-  int *pointer = NULL;
-  int *residents0 = NULL;
-  int *heads0 = NULL;
-  int *residents1 = NULL;
-  int *heads1 = NULL;
+  ResidentList rl0 = {0};
+  ResidentList rl1 = {0};
   int *gridPairs = NULL;
   *pairs = NULL;
 
   if (check_ngrid(ngrid) < 0) {
     return -1;
   }
-  const int GX = ngrid[0];
-  const int GY = ngrid[1];
-  const int GZ = ngrid[2];
   int nTotalGrids;
   if (compute_n_total_grids(ngrid, &nTotalGrids) < 0) {
     return -1;
   }
-
-  nResidents0 = (int *)calloc((size_t)nTotalGrids, sizeof(int));
-  nResidents1 = (int *)calloc((size_t)nTotalGrids, sizeof(int));
-  if (nResidents0 == NULL || nResidents1 == NULL) {
-    goto fail;
+  if (resident_list_build(npos0, rpos0, ngrid, nTotalGrids, &rl0) < 0) {
+    return -1;
   }
-  for (int i = 0; i < npos0; i++) {
-    int grid[3];
-    for (int d = 0; d < 3; d++) {
-      grid[d] = frac_to_grid(rpos0[i * 3 + d], ngrid[d]);
-    }
-    nResidents0[ADDRESS(grid[0], grid[1], grid[2])]++;
-  }
-  for (int i = 0; i < npos1; i++) {
-    int grid[3];
-    for (int d = 0; d < 3; d++) {
-      grid[d] = frac_to_grid(rpos1[i * 3 + d], ngrid[d]);
-    }
-    nResidents1[ADDRESS(grid[0], grid[1], grid[2])]++;
-  }
-
-  if ((size_t)npos0 > SIZE_MAX - (size_t)nTotalGrids ||
-      (size_t)npos1 > SIZE_MAX - (size_t)nTotalGrids) {
-    goto fail;
-  }
-  pointer = (int *)calloc((size_t)nTotalGrids, sizeof(int));
-  residents0 = (int *)calloc((size_t)npos0 + (size_t)nTotalGrids, sizeof(int));
-  heads0 = (int *)calloc((size_t)nTotalGrids, sizeof(int));
-  if (pointer == NULL || residents0 == NULL || heads0 == NULL) {
-    goto fail;
-  }
-  int head = 0;
-  for (int g = 0; g < nTotalGrids; g++) {
-    heads0[g] = head;
-    pointer[g] = head;
-    head += nResidents0[g] + 1;
-    residents0[head - 1] = -1;
-  }
-  for (int i = 0; i < npos0; i++) {
-    int grid[3];
-    for (int d = 0; d < 3; d++) {
-      grid[d] = frac_to_grid(rpos0[i * 3 + d], ngrid[d]);
-    }
-    int a = ADDRESS(grid[0], grid[1], grid[2]);
-    residents0[pointer[a]] = i;
-    pointer[a]++;
-  }
-
-  residents1 = (int *)calloc((size_t)npos1 + (size_t)nTotalGrids, sizeof(int));
-  heads1 = (int *)calloc((size_t)nTotalGrids, sizeof(int));
-  if (residents1 == NULL || heads1 == NULL) {
-    goto fail;
-  }
-  head = 0;
-  for (int g = 0; g < nTotalGrids; g++) {
-    heads1[g] = head;
-    pointer[g] = head;
-    head += nResidents1[g] + 1;
-    residents1[head - 1] = -1;
-  }
-  for (int i = 0; i < npos1; i++) {
-    int grid[3];
-    for (int d = 0; d < 3; d++) {
-      grid[d] = frac_to_grid(rpos1[i * 3 + d], ngrid[d]);
-    }
-    int a = ADDRESS(grid[0], grid[1], grid[2]);
-    residents1[pointer[a]] = i;
-    pointer[a]++;
+  if (resident_list_build(npos1, rpos1, ngrid, nTotalGrids, &rl1) < 0) {
+    resident_list_clear(&rl0);
+    return -1;
   }
 
   int nGridPairs = gridpairlist(ngrid, False, &gridPairs);
@@ -428,18 +402,12 @@ returns:
     goto fail;
   }
 
+  /* gridPairs already includes same-cell (g,g); do not count them again. */
   int estim = 0;
   for (int i = 0; i < nGridPairs; i++) {
     int g0 = gridPairs[i * 2 + 0];
     int g1 = gridPairs[i * 2 + 1];
-    if (accum_prod(&estim, nResidents0[g0], nResidents1[g1]) < 0) {
-      goto fail;
-    }
-  }
-  /* NOTE: same-cell pairs are already included in gridPairs when single=False;
-     the extra loop below over-allocates (kept for now; cleaned in a later pass). */
-  for (int g = 0; g < nTotalGrids; g++) {
-    if (accum_prod(&estim, nResidents0[g], nResidents1[g]) < 0) {
+    if (accum_prod(&estim, rl0.nResidents[g0], rl1.nResidents[g1]) < 0) {
       goto fail;
     }
   }
@@ -456,10 +424,10 @@ returns:
   for (int i = 0; i < nGridPairs; i++) {
     int g0 = gridPairs[i * 2 + 0];
     int g1 = gridPairs[i * 2 + 1];
-    for (int j = 0; j < nResidents0[g0]; j++) {
-      int r0 = residents0[heads0[g0] + j];
-      for (int k = 0; k < nResidents1[g1]; k++) {
-        int r1 = residents1[heads1[g1] + k];
+    for (int j = 0; j < rl0.nResidents[g0]; j++) {
+      int r0 = rl0.residents[rl0.heads[g0] + j];
+      for (int k = 0; k < rl1.nResidents[g1]; k++) {
+        int r1 = rl1.residents[rl1.heads[g1] + k];
         (*pairs)[nPairs * 2 + 0] = r0;
         (*pairs)[nPairs * 2 + 1] = r1;
         nPairs++;
@@ -467,29 +435,21 @@ returns:
     }
   }
 
+  shrink_pair_buffer(pairs, estim, nPairs);
   free(gridPairs);
-  free(nResidents0);
-  free(nResidents1);
-  free(residents0);
-  free(residents1);
-  free(pointer);
-  free(heads0);
-  free(heads1);
+  resident_list_clear(&rl0);
+  resident_list_clear(&rl1);
   return nPairs;
 
 fail:
   free(gridPairs);
-  free(nResidents0);
-  free(nResidents1);
-  free(residents0);
-  free(residents1);
-  free(pointer);
-  free(heads0);
-  free(heads1);
+  resident_list_clear(&rl0);
+  resident_list_clear(&rl1);
   free(*pairs);
   *pairs = NULL;
   return -1;
 }
+
 
 
 int
