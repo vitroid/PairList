@@ -27,7 +27,7 @@ ipykernel = "^6.29.4"
 matplotlib = "^3.8.3"
 
 [build-system]
-requires = ["poetry-core", "setuptools", "numpy"]
+requires = ["poetry-core", "setuptools", "numpy==2.0.2"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.cibuildwheel]
