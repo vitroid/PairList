@@ -6,7 +6,7 @@ Given coordinates and a cutoff, it yields index pairs \((i, j)\) whose distance
 is below the threshold. Internally it uses a cell-list algorithm with an
 optional C extension.
 
-version 1.0.1
+version 1.0.2
 
 ## Install
 
